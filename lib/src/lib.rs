@@ -5,6 +5,9 @@ use std::fmt::Debug;
 
 pub use jsonrpc_client_macro::*;
 
+pub const V1: &'static str = "1.0";
+pub const V2: &'static str = "2.0";
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]
 pub enum Id {
@@ -24,7 +27,7 @@ impl Request {
     pub fn new(method: &str, params: Vec<serde_json::Value>) -> Self {
         Self {
             id: Id::Number(0),
-            jsonrpc: "2.0",
+            jsonrpc: V2,
             method: method.to_owned(),
             params,
         }
@@ -128,7 +131,7 @@ mod tests {
             response,
             Response {
                 id: Id::String("1".to_owned()),
-                jsonrpc: "2.0",
+                jsonrpc: V2,
                 payload: ResponsePayload::Error(JsonRpcError {
                     code: -32601,
                     message: "Method not found".to_owned()
@@ -147,7 +150,7 @@ mod tests {
             response,
             Response {
                 id: Id::Number(1),
-                jsonrpc: "2.0",
+                jsonrpc: V2,
                 payload: ResponsePayload::Result(json!(19))
             }
         )
