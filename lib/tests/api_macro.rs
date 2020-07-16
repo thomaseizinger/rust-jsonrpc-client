@@ -8,12 +8,25 @@ pub trait Math {
     fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 }
 
+impl Math for Client {}
+
+#[test]
+fn creates_correct_request() {
+    let client = Client::with_next_response(Response::new_v2_result(Id::Number(1), json!(1)));
+
+    let result = client.subtract(5, 4).unwrap();
+
+    assert_eq!(result, 1);
+    assert_eq!(
+        client.take_recorded_request(),
+        Request::new_v2("subtract", vec![json!(5), json!(4)])
+    );
+}
+
 struct Client {
     next_response: Cell<Option<Response>>,
     recorded_request: Cell<Option<Request>>,
 }
-
-impl Math for Client {}
 
 impl Client {
     fn with_next_response(response: Response) -> Self {
@@ -37,17 +50,4 @@ impl SendRequest for Client {
 
         Ok(response)
     }
-}
-
-#[test]
-fn creates_correct_request() {
-    let client = Client::with_next_response(Response::new_v2_result(Id::Number(1), json!(1)));
-
-    let result = client.subtract(5, 4).unwrap();
-
-    assert_eq!(result, 1);
-    assert_eq!(
-        client.take_recorded_request(),
-        Request::new_v2("subtract", vec![json!(5), json!(4)])
-    );
 }
