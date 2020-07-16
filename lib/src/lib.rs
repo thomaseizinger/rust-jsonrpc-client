@@ -13,15 +13,15 @@ pub enum Id {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Request<'p> {
+pub struct Request {
     pub id: Id,
     pub jsonrpc: String,
     pub method: String,
-    pub params: &'p [serde_json::Value],
+    pub params: Vec<serde_json::Value>,
 }
 
-impl<'p> Request<'p> {
-    pub fn new(id: Id, method: &str, params: &'p [serde_json::Value]) -> Self {
+impl Request {
+    pub fn new(id: Id, method: &str, params: Vec<serde_json::Value>) -> Self {
         Self {
             id,
             jsonrpc: "2.0".to_owned(),

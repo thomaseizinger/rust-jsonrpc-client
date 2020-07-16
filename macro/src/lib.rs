@@ -70,8 +70,8 @@ fn make_new_trait(input: TokenStream) -> Result<TokenStream, Error> {
 
         Ok(quote! {
             fn #method_ident(#inputs) -> #return_type {
-                let parameters = [ #(#serialized_arguments),* ];
-                let request = ::jsonrpc_client::Request::new(::jsonrpc_client::Id::Number(1), stringify!(#method_ident), &parameters);
+                let parameters = vec![ #(#serialized_arguments),* ];
+                let request = ::jsonrpc_client::Request::new(::jsonrpc_client::Id::Number(1), stringify!(#method_ident), parameters);
 
                 match self.send_request(request) {
                     Ok(response) => match Result::from(response.payload).map_err(::jsonrpc_client::Error::JsonRpc) {
