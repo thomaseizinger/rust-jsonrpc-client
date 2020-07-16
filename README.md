@@ -10,7 +10,7 @@
 ## How does it work?
 
 We take a trait as input to a proc-macro and output another one that has default implementations for all the functions.
-This allows us to take away all the boilerplate of making JSON-RPC call and you get to define a nice interface at the same time!
+This allows us to take away all the boilerplate of making JSON-RPC calls and you get to define a nice interface at the same time!
 
 ## How do I use it?
 
