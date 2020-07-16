@@ -1,5 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
+use quote::quote_spanned;
 use syn::spanned::Spanned;
 use syn::{Error, FnArg, TraitItemMethod};
 use syn::{ItemTrait, Pat};
@@ -34,14 +35,14 @@ fn make_new_trait(input: TokenStream) -> Result<TokenStream, Error> {
             ));
         }
 
-        let TraitItemMethod { sig, attrs, .. } = method;
+        let TraitItemMethod { sig, .. } = method;
 
         // TODO: Check async and const
 
         let method_ident = sig.ident;
         let inputs = sig.inputs;
 
-        let _arguments = inputs
+        let arguments = inputs
             .iter()
             .filter_map(|input| match input {
                 FnArg::Receiver(_) => None,
@@ -54,7 +55,16 @@ fn make_new_trait(input: TokenStream) -> Result<TokenStream, Error> {
 
         // TODO: Assert that all arguments implement Serialize
 
-        let return_type = match sig.output {
+        let inner_return_type = sig.output;
+
+        {
+            let span = inner_return_type.span();
+            quote_spanned!(span => {
+                struct _AssertDeserializeOwned where #inner_return_type: DeserializeOwned + 'static
+            });
+        }
+
+        let return_type = match inner_return_type {
             ReturnType::Default => quote! {
                 Result<(), ::jsonrpc_client::Error<<Self as ::jsonrpc_client::SendRequest>::Error>>
              },
@@ -63,9 +73,20 @@ fn make_new_trait(input: TokenStream) -> Result<TokenStream, Error> {
             }
         };
 
+        let serialized_arguments = arguments.iter()
+            .map(|argument| quote! { ::serde_json::to_value(&#argument)? })
+            .collect::<Vec<_>>();
+
+
         Ok(quote! {
             fn #method_ident(#inputs) -> #return_type {
-                unimplemented!()
+                let parameters = [ #(#serialized_arguments),* ];
+                let request = ::jsonrpc_client::Request::new(::jsonrpc_client::Id::Number(1), "#method_ident", &parameters);
+
+                match self.send_request(request) {
+                    Ok(response) => Result::from(response.payload).map_err(::jsonrpc_client::Error::JsonRpc),
+                    Err(error) => Err(::jsonrpc_client::Error::Client(error))
+                }
             }
         })
     }).collect::<Result<Vec<_>, _>>()?;

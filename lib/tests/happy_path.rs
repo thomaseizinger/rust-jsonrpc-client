@@ -33,12 +33,11 @@ impl Client {
 impl SendRequest for Client {
     type Error = Infallible;
 
-    fn send<Res>(&self, request: Request) -> Result<Response<Res>, Self::Error>
+    fn send_request<Res>(&self, _: Request) -> Result<Response<Res>, Self::Error>
     where
         Res: DeserializeOwned + 'static,
     {
         let response = self.next_response.replace(None).unwrap();
-
         let response = *response.downcast::<Response<Res>>().unwrap();
 
         Ok(response)
@@ -52,7 +51,7 @@ fn subtract() {
     client.set_next_response(Response {
         id: Id::Number(1),
         jsonrpc: "2.0".to_string(),
-        payload: ResponsePayload::Result(1),
+        payload: ResponsePayload::Result(1i64),
     });
 
     let result = client.subtract(5, 4).unwrap();

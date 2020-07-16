@@ -14,15 +14,15 @@ pub enum Id {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Request {
+pub struct Request<'p> {
     pub id: Id,
     pub jsonrpc: String,
     pub method: String,
-    pub params: Vec<serde_json::Value>,
+    pub params: &'p [serde_json::Value],
 }
 
-impl Request {
-    pub fn new(id: Id, method: &str, params: Vec<serde_json::Value>) -> Self {
+impl<'p> Request<'p> {
+    pub fn new(id: Id, method: &str, params: &'p [serde_json::Value]) -> Self {
         Self {
             id,
             jsonrpc: "2.0".to_owned(),
@@ -78,6 +78,7 @@ impl StdError for JsonRpcError {}
 pub enum Error<C> {
     Client(C),
     JsonRpc(JsonRpcError),
+    Serde(serde_json::Error),
 }
 
 impl<C> fmt::Display for Error<C>
@@ -88,7 +89,20 @@ where
         match self {
             Error::Client(client_error) => fmt::Display::fmt(client_error, f),
             Error::JsonRpc(jsonrpc_error) => fmt::Display::fmt(jsonrpc_error, f),
+            Error::Serde(serde_error) => fmt::Display::fmt(serde_error, f),
         }
+    }
+}
+
+impl<C> From<serde_json::Error> for Error<C> {
+    fn from(serde_error: serde_json::Error) -> Self {
+        Error::Serde(serde_error)
+    }
+}
+
+impl<C> From<JsonRpcError> for Error<C> {
+    fn from(jsonrpc_error: JsonRpcError) -> Self {
+        Error::JsonRpc(jsonrpc_error)
     }
 }
 
@@ -97,7 +111,7 @@ impl<C> StdError for Error<C> where C: StdError {}
 pub trait SendRequest {
     type Error: StdError;
 
-    fn send<Res>(&self, request: Request) -> Result<Response<Res>, Self::Error>
+    fn send_request<Res>(&self, request: Request) -> Result<Response<Res>, Self::Error>
     where
         Res: DeserializeOwned + 'static;
 }
