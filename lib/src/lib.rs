@@ -1,4 +1,3 @@
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::error::Error as StdError;
 use std::fmt;
@@ -33,22 +32,22 @@ impl<'p> Request<'p> {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
-pub struct Response<T> {
+pub struct Response {
     pub id: Id,
     pub jsonrpc: String,
     #[serde(flatten)]
-    pub payload: ResponsePayload<T>,
+    pub payload: ResponsePayload,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub enum ResponsePayload<T> {
-    Result(T),
+pub enum ResponsePayload {
+    Result(serde_json::Value),
     Error(JsonRpcError),
 }
 
-impl<T> From<ResponsePayload<T>> for Result<T, JsonRpcError> {
-    fn from(payload: ResponsePayload<T>) -> Self {
+impl From<ResponsePayload> for Result<serde_json::Value, JsonRpcError> {
+    fn from(payload: ResponsePayload) -> Self {
         match payload {
             ResponsePayload::Result(result) => Ok(result),
             ResponsePayload::Error(e) => Err(e),
@@ -111,9 +110,7 @@ impl<C> StdError for Error<C> where C: StdError {}
 pub trait SendRequest {
     type Error: StdError;
 
-    fn send_request<Res>(&self, request: Request) -> Result<Response<Res>, Self::Error>
-    where
-        Res: DeserializeOwned + 'static;
+    fn send_request(&self, request: Request) -> Result<Response, Self::Error>;
 }
 
 #[cfg(test)]
@@ -125,7 +122,7 @@ mod tests {
     fn deserialize_error_response() {
         let json = r#"{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "1"}"#;
 
-        let response = serde_json::from_str::<Response<()>>(json).unwrap();
+        let response = serde_json::from_str::<Response>(json).unwrap();
 
         assert_eq!(
             response,
@@ -144,21 +141,22 @@ mod tests {
     fn deserialize_success_response() {
         let json = r#"{"jsonrpc": "2.0", "result": 19, "id": 1}"#;
 
-        let response = serde_json::from_str::<Response<u64>>(json).unwrap();
+        let response = serde_json::from_str::<Response>(json).unwrap();
 
         assert_eq!(
             response,
             Response {
                 id: Id::Number(1),
                 jsonrpc: "2.0".to_owned(),
-                payload: ResponsePayload::Result(19)
+                payload: ResponsePayload::Result(json!(19))
             }
         )
     }
 
     #[test]
     fn serialize_request() {
-        let request = Request::new(Id::Number(1), "subtract", vec![json!(42), json!(23)]);
+        let parameters = [json!(42), json!(23)];
+        let request = Request::new(Id::Number(1), "subtract", &parameters);
 
         let json = serde_json::to_string(&request).unwrap();
 

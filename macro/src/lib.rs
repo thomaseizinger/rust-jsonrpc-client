@@ -1,6 +1,5 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use quote::quote_spanned;
 use syn::spanned::Spanned;
 use syn::{Error, FnArg, TraitItemMethod};
 use syn::{ItemTrait, Pat};
@@ -55,16 +54,7 @@ fn make_new_trait(input: TokenStream) -> Result<TokenStream, Error> {
 
         // TODO: Assert that all arguments implement Serialize
 
-        let inner_return_type = sig.output;
-
-        {
-            let span = inner_return_type.span();
-            quote_spanned!(span => {
-                struct _AssertDeserializeOwned where #inner_return_type: DeserializeOwned + 'static
-            });
-        }
-
-        let return_type = match inner_return_type {
+        let return_type = match sig.output {
             ReturnType::Default => quote! {
                 Result<(), ::jsonrpc_client::Error<<Self as ::jsonrpc_client::SendRequest>::Error>>
              },
@@ -84,7 +74,10 @@ fn make_new_trait(input: TokenStream) -> Result<TokenStream, Error> {
                 let request = ::jsonrpc_client::Request::new(::jsonrpc_client::Id::Number(1), "#method_ident", &parameters);
 
                 match self.send_request(request) {
-                    Ok(response) => Result::from(response.payload).map_err(::jsonrpc_client::Error::JsonRpc),
+                    Ok(response) => match Result::from(response.payload).map_err(::jsonrpc_client::Error::JsonRpc) {
+                        Ok(value) => serde_json::from_value(value).map_err(::jsonrpc_client::Error::Serde),
+                        Err(e) => Err(e)
+                    },
                     Err(error) => Err(::jsonrpc_client::Error::Client(error))
                 }
             }
