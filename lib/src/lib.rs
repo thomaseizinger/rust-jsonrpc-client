@@ -15,7 +15,7 @@ pub enum Id {
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct Request {
     pub id: Id,
-    pub jsonrpc: String,
+    pub jsonrpc: &'static str,
     pub method: String,
     pub params: Vec<serde_json::Value>,
 }
@@ -24,7 +24,7 @@ impl Request {
     pub fn new(method: &str, params: Vec<serde_json::Value>) -> Self {
         Self {
             id: Id::Number(0),
-            jsonrpc: "2.0".to_owned(),
+            jsonrpc: "2.0",
             method: method.to_owned(),
             params,
         }
@@ -34,7 +34,7 @@ impl Request {
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Response {
     pub id: Id,
-    pub jsonrpc: String,
+    pub jsonrpc: &'static str,
     #[serde(flatten)]
     pub payload: ResponsePayload,
 }
@@ -128,7 +128,7 @@ mod tests {
             response,
             Response {
                 id: Id::String("1".to_owned()),
-                jsonrpc: "2.0".to_owned(),
+                jsonrpc: "2.0",
                 payload: ResponsePayload::Error(JsonRpcError {
                     code: -32601,
                     message: "Method not found".to_owned()
@@ -147,7 +147,7 @@ mod tests {
             response,
             Response {
                 id: Id::Number(1),
-                jsonrpc: "2.0".to_owned(),
+                jsonrpc: "2.0",
                 payload: ResponsePayload::Result(json!(19))
             }
         )

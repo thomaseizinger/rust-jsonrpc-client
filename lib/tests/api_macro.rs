@@ -43,7 +43,7 @@ impl SendRequest for Client {
 fn creates_correct_request() {
     let client = Client::with_next_response(Response {
         id: Id::Number(1),
-        jsonrpc: "2.0".to_string(),
+        jsonrpc: "2.0",
         payload: ResponsePayload::Result(json!(1)),
     });
 
