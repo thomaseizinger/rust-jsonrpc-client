@@ -21,4 +21,6 @@ impl jsonrpc_client::SendRequest for Client {
     }
 }
 
+impl Math for Client {}
+
 fn main() {}
