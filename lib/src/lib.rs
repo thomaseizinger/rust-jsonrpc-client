@@ -24,7 +24,7 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(method: &str, params: Vec<serde_json::Value>) -> Self {
+    pub fn new_v2(method: &str, params: Vec<serde_json::Value>) -> Self {
         Self {
             id: Id::Number(0),
             jsonrpc: V2,
@@ -40,6 +40,24 @@ pub struct Response {
     pub jsonrpc: &'static str,
     #[serde(flatten)]
     pub payload: ResponsePayload,
+}
+
+impl Response {
+    pub fn new_v2_result(id: Id, result: serde_json::Value) -> Self {
+        Self {
+            id,
+            jsonrpc: V2,
+            payload: ResponsePayload::Result(result),
+        }
+    }
+
+    pub fn new_v2_error(id: Id, error: JsonRpcError) -> Self {
+        Self {
+            id,
+            jsonrpc: V2,
+            payload: ResponsePayload::Error(error),
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -129,14 +147,13 @@ mod tests {
 
         assert_eq!(
             response,
-            Response {
-                id: Id::String("1".to_owned()),
-                jsonrpc: V2,
-                payload: ResponsePayload::Error(JsonRpcError {
+            Response::new_v2_error(
+                Id::String("1".to_owned()),
+                JsonRpcError {
                     code: -32601,
                     message: "Method not found".to_owned()
-                })
-            }
+                }
+            )
         )
     }
 
@@ -146,19 +163,12 @@ mod tests {
 
         let response = serde_json::from_str::<Response>(json).unwrap();
 
-        assert_eq!(
-            response,
-            Response {
-                id: Id::Number(1),
-                jsonrpc: V2,
-                payload: ResponsePayload::Result(json!(19))
-            }
-        )
+        assert_eq!(response, Response::new_v2_result(Id::Number(1), json!(19)))
     }
 
     #[test]
     fn serialize_request() {
-        let request = Request::new("subtract", vec![json!(42), json!(23)]);
+        let request = Request::new_v2("subtract", vec![json!(42), json!(23)]);
 
         let json = serde_json::to_string(&request).unwrap();
 

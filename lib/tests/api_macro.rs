@@ -1,4 +1,4 @@
-use jsonrpc_client::{Id, Request, Response, ResponsePayload, SendRequest};
+use jsonrpc_client::{Id, Request, Response, SendRequest};
 use serde_json::json;
 use std::cell::Cell;
 use std::convert::Infallible;
@@ -41,17 +41,13 @@ impl SendRequest for Client {
 
 #[test]
 fn creates_correct_request() {
-    let client = Client::with_next_response(Response {
-        id: Id::Number(1),
-        jsonrpc: "2.0",
-        payload: ResponsePayload::Result(json!(1)),
-    });
+    let client = Client::with_next_response(Response::new_v2_result(Id::Number(1), json!(1)));
 
     let result = client.subtract(5, 4).unwrap();
 
     assert_eq!(result, 1);
     assert_eq!(
         client.take_recorded_request(),
-        Request::new("subtract", vec![json!(5), json!(4)])
+        Request::new_v2("subtract", vec![json!(5), json!(4)])
     );
 }
