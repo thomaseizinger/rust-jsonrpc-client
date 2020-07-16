@@ -12,7 +12,7 @@ pub enum Id {
     String(String),
 }
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct Request {
     pub id: Id,
     pub jsonrpc: String,
@@ -21,9 +21,9 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(id: Id, method: &str, params: Vec<serde_json::Value>) -> Self {
+    pub fn new(method: &str, params: Vec<serde_json::Value>) -> Self {
         Self {
-            id,
+            id: Id::Number(0),
             jsonrpc: "2.0".to_owned(),
             method: method.to_owned(),
             params,
@@ -155,14 +155,13 @@ mod tests {
 
     #[test]
     fn serialize_request() {
-        let parameters = [json!(42), json!(23)];
-        let request = Request::new(Id::Number(1), "subtract", &parameters);
+        let request = Request::new("subtract", vec![json!(42), json!(23)]);
 
         let json = serde_json::to_string(&request).unwrap();
 
         assert_eq!(
             json,
-            r#"{"id":1,"jsonrpc":"2.0","method":"subtract","params":[42,23]}"#
+            r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":[42,23]}"#
         )
     }
 }
