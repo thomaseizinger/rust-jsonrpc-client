@@ -5,9 +5,6 @@ use std::fmt::Debug;
 
 pub use jsonrpc_client_macro::*;
 
-pub const V1: &'static str = "1.0";
-pub const V2: &'static str = "2.0";
-
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]
 pub enum Id {
@@ -18,7 +15,7 @@ pub enum Id {
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct Request {
     pub id: Id,
-    pub jsonrpc: &'static str,
+    pub jsonrpc: String,
     pub method: String,
     pub params: Vec<serde_json::Value>,
 }
@@ -27,7 +24,7 @@ impl Request {
     pub fn new_v2(method: &str, params: Vec<serde_json::Value>) -> Self {
         Self {
             id: Id::Number(0),
-            jsonrpc: V2,
+            jsonrpc: String::from("2.0"),
             method: method.to_owned(),
             params,
         }
@@ -37,7 +34,7 @@ impl Request {
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Response {
     pub id: Id,
-    pub jsonrpc: &'static str,
+    pub jsonrpc: String,
     #[serde(flatten)]
     pub payload: ResponsePayload,
 }
@@ -46,7 +43,7 @@ impl Response {
     pub fn new_v2_result(id: Id, result: serde_json::Value) -> Self {
         Self {
             id,
-            jsonrpc: V2,
+            jsonrpc: String::from("2.0"),
             payload: ResponsePayload::Result(result),
         }
     }
@@ -54,7 +51,7 @@ impl Response {
     pub fn new_v2_error(id: Id, error: JsonRpcError) -> Self {
         Self {
             id,
-            jsonrpc: V2,
+            jsonrpc: String::from("2.0"),
             payload: ResponsePayload::Error(error),
         }
     }
