@@ -14,7 +14,14 @@ This allows us to take away all the boilerplate of making JSON-RPC calls and you
 
 ## How do I use it?
 
-1. Define a trait that describes the JSON-RPC API you want to talk to and annotate it with `#[jsonrpc_client::api]`:
+1. Depend on `jsonrpc_client`:
+
+    ```toml
+   [dependencies]
+   jsonrpc_client = { version = "*", features = ["reqwest"] } 
+   ```
+
+2. Define a trait that describes the JSON-RPC API you want to talk to and annotate it with `#[jsonrpc_client::api]`:
     ```rust
     #[jsonrpc_client::api]
     pub trait Math {
@@ -22,32 +29,14 @@ This allows us to take away all the boilerplate of making JSON-RPC calls and you
     }
     ```
 
-2. Define your client:
+3. Define your client:
     
     ```rust
+    #[jsonrpc_client::impl(Math)]
     struct Client {
-        inner: reqwest::Client
+        inner: reqwest::Client,
+        base_url: reqwest::Url
     }
     ```
-
-3. Implement the `jsonrpc_client::SendRequest` trait for your client.
-For most backends, this should almost be a oneliner.
-
-    ```rust
-    impl jsonrpc_client::SendRequest for Client {
-        type Error = reqwest::Error;
-    
-        fn send_request(&self, request: Request) -> Result<Response, Self::Error> {
-            self.inner.post("http://example.org").json(&request).send()?.json()
-        }
-    }
-   ```
-
-4. Implement the API trait on your client.
-The macro provided default implementations for all functions based on the `SendRequest` functionality.
-
-    ```rust
-   impl Math for Client {} 
-   ```
-
-5. Start using your client!
+   
+4. Start using your client!
