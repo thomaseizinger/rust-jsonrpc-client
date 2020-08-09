@@ -34,7 +34,7 @@ impl Request {
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Response {
     pub id: Id,
-    pub jsonrpc: String,
+    pub jsonrpc: Option<String>,
     #[serde(flatten)]
     pub payload: ResponsePayload,
 }
@@ -43,7 +43,7 @@ impl Response {
     pub fn new_v2_result(id: Id, result: serde_json::Value) -> Self {
         Self {
             id,
-            jsonrpc: String::from("2.0"),
+            jsonrpc: Some(String::from("2.0")),
             payload: ResponsePayload::Result(result),
         }
     }
@@ -51,7 +51,7 @@ impl Response {
     pub fn new_v2_error(id: Id, error: JsonRpcError) -> Self {
         Self {
             id,
-            jsonrpc: String::from("2.0"),
+            jsonrpc: Some(String::from("2.0")),
             payload: ResponsePayload::Error(error),
         }
     }
