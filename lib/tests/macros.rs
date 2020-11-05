@@ -2,7 +2,6 @@ use jsonrpc_client::{Id, Response, SendRequest};
 use serde::de::DeserializeOwned;
 use serde::export::Formatter;
 use serde::Serialize;
-use serde_json::json;
 use std::cell::Cell;
 use std::fmt;
 use std::fmt::Display;
@@ -115,7 +114,7 @@ fn test_impls_math_api() {
 #[test]
 fn creates_correct_request() {
     let client = derive_on_named_inner::Client {
-        inner: InnerClient::with_next_response(Response::new_v2_result(Id::Number(1), json!(1))),
+        inner: InnerClient::with_next_response(Response::new_v2_result(Id::Number(1), 1)),
         ..derive_on_named_inner::Client::default()
     };
 
