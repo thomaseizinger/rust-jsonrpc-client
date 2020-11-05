@@ -1,6 +1,5 @@
 use crate::{Response, SendRequest};
-use reqwest::header::CONTENT_TYPE;
-use reqwest::Url;
+use reqwest::{header::CONTENT_TYPE, Url};
 use serde::de::DeserializeOwned;
 
 impl SendRequest for reqwest::blocking::Client {

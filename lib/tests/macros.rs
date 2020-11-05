@@ -81,7 +81,7 @@ fn assert_impls_math<C: SendRequest, T: Math<C>>(_: T) {}
 mod derive_on_named_inner {
     use crate::{ExampleDotOrg, InnerClient};
 
-    #[jsonrpc_client::r#impl(super::Math)]
+    #[jsonrpc_client::implement(super::Math)]
     #[derive(Default)]
     pub struct Client {
         pub inner: InnerClient,
@@ -92,7 +92,7 @@ mod derive_on_named_inner {
 mod derive_on_named_inner_multiple_fields {
     use crate::{ExampleDotOrg, InnerClient};
 
-    #[jsonrpc_client::r#impl(super::Math)]
+    #[jsonrpc_client::implement(super::Math)]
     #[derive(Default)]
     pub struct Client {
         inner: InnerClient,

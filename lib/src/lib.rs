@@ -1,14 +1,11 @@
 #[cfg(feature = "reqwest")]
 mod reqwest;
 
-use serde::{Deserialize, Serialize};
-use std::error::Error as StdError;
-use std::fmt;
-use std::fmt::Debug;
+pub use jsonrpc_client_macro::{api, implement};
 
-pub use jsonrpc_client_macro::api;
-pub use jsonrpc_client_macro::r#impl;
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::error::Error as StdError;
+use std::fmt::{self, Debug};
 use url::Url;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -110,9 +107,9 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Client(client_error) => fmt::Display::fmt(client_error, f),
-            Error::JsonRpc(jsonrpc_error) => fmt::Display::fmt(jsonrpc_error, f),
-            Error::Serde(serde_error) => fmt::Display::fmt(serde_error, f),
+            Error::Client(inner) => fmt::Display::fmt(inner, f),
+            Error::JsonRpc(inner) => fmt::Display::fmt(inner, f),
+            Error::Serde(inner) => fmt::Display::fmt(inner, f),
         }
     }
 }

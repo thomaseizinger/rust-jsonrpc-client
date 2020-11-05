@@ -14,7 +14,7 @@ pub fn api(_: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn r#impl(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn implement(attr: TokenStream, item: TokenStream) -> TokenStream {
     match make_api_impl(item, attr) {
         Ok(output) => output,
         Err(e) => e.to_compile_error().into(),

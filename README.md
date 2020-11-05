@@ -32,7 +32,7 @@ This allows us to take away all the boilerplate of making JSON-RPC calls and you
 3. Define your client:
     
     ```rust
-    #[jsonrpc_client::impl(Math)]
+    #[jsonrpc_client::implement(Math)]
     struct Client {
         inner: reqwest::Client,
         base_url: reqwest::Url
