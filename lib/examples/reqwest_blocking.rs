@@ -1,26 +1,29 @@
-use jsonrpc_client::{Request, Response};
+use anyhow::Result;
 
 #[jsonrpc_client::api]
 pub trait Math {
     fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 }
 
+#[jsonrpc_client::r#impl(Math)]
 struct Client {
     inner: reqwest::blocking::Client,
+    base_url: reqwest::Url,
 }
 
-impl jsonrpc_client::SendRequest for Client {
-    type Error = reqwest::Error;
-
-    fn send_request(&self, request: Request) -> Result<Response, Self::Error> {
-        self.inner
-            .post("http://example.org")
-            .json(&request)
-            .send()?
-            .json()
+impl Client {
+    fn new(base_url: String) -> Result<Self> {
+        Ok(Self {
+            inner: reqwest::blocking::Client::new(),
+            base_url: base_url.parse()?,
+        })
     }
 }
 
-impl Math for Client {}
+fn main() -> Result<()> {
+    let client = Client::new("http://example-jsonrpc.org/".to_owned())?;
 
-fn main() {}
+    let _ = client.subtract(10, 5)?;
+
+    Ok(())
+}

@@ -1,9 +1,15 @@
+#[cfg(feature = "reqwest")]
+mod reqwest;
+
 use serde::{Deserialize, Serialize};
 use std::error::Error as StdError;
 use std::fmt;
 use std::fmt::Debug;
 
-pub use jsonrpc_client_macro::*;
+pub use jsonrpc_client_macro::api;
+pub use jsonrpc_client_macro::r#impl;
+use serde::de::DeserializeOwned;
+use url::Url;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]
@@ -31,16 +37,16 @@ impl Request {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
-pub struct Response {
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Response<P> {
     pub id: Id,
     pub jsonrpc: Option<String>,
     #[serde(flatten)]
-    pub payload: ResponsePayload,
+    pub payload: ResponsePayload<P>,
 }
 
-impl Response {
-    pub fn new_v2_result(id: Id, result: serde_json::Value) -> Self {
+impl<P> Response<P> {
+    pub fn new_v2_result(id: Id, result: P) -> Self {
         Self {
             id,
             jsonrpc: Some(String::from("2.0")),
@@ -57,15 +63,15 @@ impl Response {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub enum ResponsePayload {
-    Result(serde_json::Value),
+pub enum ResponsePayload<P> {
+    Result(P),
     Error(JsonRpcError),
 }
 
-impl From<ResponsePayload> for Result<serde_json::Value, JsonRpcError> {
-    fn from(payload: ResponsePayload) -> Self {
+impl<P> From<ResponsePayload<P>> for Result<P, JsonRpcError> {
+    fn from(payload: ResponsePayload<P>) -> Self {
         match payload {
             ResponsePayload::Result(result) => Ok(result),
             ResponsePayload::Error(e) => Err(e),
@@ -73,7 +79,7 @@ impl From<ResponsePayload> for Result<serde_json::Value, JsonRpcError> {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct JsonRpcError {
     pub code: i64,
     pub message: String,
@@ -123,12 +129,25 @@ impl<C> From<JsonRpcError> for Error<C> {
     }
 }
 
-impl<C> StdError for Error<C> where C: StdError {}
+impl<C> StdError for Error<C>
+where
+    C: StdError + 'static,
+{
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            Error::Client(inner) => Some(inner),
+            Error::JsonRpc(inner) => Some(inner),
+            Error::Serde(inner) => Some(inner),
+        }
+    }
+}
 
 pub trait SendRequest {
     type Error: StdError;
 
-    fn send_request(&self, request: Request) -> Result<Response, Self::Error>;
+    fn send_request<P>(&self, url: Url, body: String) -> Result<Response<P>, Self::Error>
+    where
+        P: DeserializeOwned;
 }
 
 #[cfg(test)]
@@ -140,7 +159,7 @@ mod tests {
     fn deserialize_error_response() {
         let json = r#"{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "1"}"#;
 
-        let response = serde_json::from_str::<Response>(json).unwrap();
+        let response = serde_json::from_str::<Response<()>>(json).unwrap();
 
         assert_eq!(
             response,
@@ -158,9 +177,9 @@ mod tests {
     fn deserialize_success_response() {
         let json = r#"{"jsonrpc": "2.0", "result": 19, "id": 1}"#;
 
-        let response = serde_json::from_str::<Response>(json).unwrap();
+        let response = serde_json::from_str::<Response<i32>>(json).unwrap();
 
-        assert_eq!(response, Response::new_v2_result(Id::Number(1), json!(19)))
+        assert_eq!(response, Response::new_v2_result(Id::Number(1), 19))
     }
 
     #[test]
