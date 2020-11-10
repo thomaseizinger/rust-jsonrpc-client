@@ -1,0 +1,5 @@
+error: trait must only define methods
+ --> $DIR/trait_with_const.rs:3:5
+  |
+3 |     const FOO: i32;
+  |     ^^^^^

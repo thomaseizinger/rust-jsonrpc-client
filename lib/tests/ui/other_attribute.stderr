@@ -1,0 +1,5 @@
+error: invalid configuration attribute, currently only `version` is supported
+ --> $DIR/other_attribute.rs:1:23
+  |
+1 | #[jsonrpc_client::api(foo = "bar")]
+  |                       ^^^

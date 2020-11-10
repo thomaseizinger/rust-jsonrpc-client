@@ -1,0 +1,8 @@
+error: struct needs to have either a field named `inner` or one tagged with `#[jsonrpc_client(inner)]`
+  --> $DIR/client_without_attr_and_naming_convention.rs:26:19
+   |
+26 |   pub struct Client {
+   |  ___________________^
+27 | |     inner_client: InnerClient,
+28 | | }
+   | |_^

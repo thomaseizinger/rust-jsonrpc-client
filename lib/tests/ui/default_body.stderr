@@ -1,0 +1,8 @@
+error: trait method must not have a default implementation
+ --> $DIR/default_body.rs:3:68
+  |
+3 |       async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64 {
+  |  ____________________________________________________________________^
+4 | |         10
+5 | |     }
+  | |_____^

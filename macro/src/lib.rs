@@ -1,8 +1,8 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
-    spanned::Spanned, Error, FnArg, ItemStruct, ItemTrait, Lit, Meta, MetaNameValue, NestedMeta,
-    Pat, Path, ReturnType, TraitItem, TraitItemMethod,
+    spanned::Spanned, Error, Field, FnArg, ItemStruct, ItemTrait, Lit, Meta, MetaNameValue,
+    NestedMeta, Pat, Path, ReturnType, TraitItem, TraitItemMethod,
 };
 
 #[proc_macro_attribute]
@@ -144,18 +144,11 @@ fn make_api_impl(item: TokenStream, attr: TokenStream) -> Result<TokenStream, Er
     if struct_def.fields.is_empty() {
         return Err(Error::new(
             struct_def.span(),
-            "struct needs to have at least one field",
+            "struct needs to have a client and a base URL",
         ));
     }
 
-    let (index, client) = if struct_def.fields.len() == 1 {
-        struct_def
-            .fields
-            .iter()
-            .enumerate()
-            .next()
-            .expect("must have field at this stage")
-    } else {
+    let (client_access, client_ty) = {
         let tagged_inner = struct_def.fields.iter().enumerate().find(|(_, field)| {
             field
                 .attrs
@@ -180,33 +173,67 @@ fn make_api_impl(item: TokenStream, attr: TokenStream) -> Result<TokenStream, Er
         });
 
         match tagged_inner.or(named_inner) {
-            Some(field) => field,
+            Some((_, Field { ident: Some(ident), ty, .. })) => (quote! { self.#ident }, ty),
+            Some((index, Field { ident: None, ty, .. })) => {
+                let index = syn::Index::from(index);
+
+                (
+                    quote! { self.#index },
+                    ty
+                )
+            },
             None => return Err(Error::new(
-                struct_def.span(),
+                struct_def.fields.span(),
                 "struct needs to have either a field named `inner` or one tagged with `#[jsonrpc_client(inner)]`",
             ))
         }
     };
 
-    let inner_type = &client.ty;
-    let index = syn::Index::from(index);
+    let base_url_access = {
+        let tagged_inner = struct_def.fields.iter().enumerate().find(|(_, field)| {
+            field
+                .attrs
+                .iter()
+                .find(|attr| attr.path.is_ident("jsonrpc_client"))
+                .filter(|attr| match attr.parse_meta() {
+                    Ok(Meta::List(list)) => match list.nested.first() {
+                        Some(NestedMeta::Meta(Meta::Path(path))) => path.is_ident("base_url"),
+                        _ => false,
+                    },
+                    _ => false,
+                })
+                .is_some()
+        });
 
-    let inner_access = match &client.ident {
-        Some(ident) => quote! {
-            self.#ident
-        },
-        None => quote! {
-            self.#index
-        },
+        let named_inner = struct_def.fields.iter().enumerate().find(|(_, field)| {
+            field
+                .ident
+                .as_ref()
+                .map(|ident| ident == "base_url")
+                .unwrap_or(false)
+        });
+
+        match tagged_inner.or(named_inner) {
+            Some((_, Field { ident: Some(ident),  .. })) => quote! { self.#ident },
+            Some((index, Field { ident: None,  .. })) => {
+                let index = syn::Index::from(index);
+
+                quote! { self.#index }
+            },
+            None => return Err(Error::new(
+                struct_def.fields.span(),
+                "struct needs to have either a field named `base_url` or one tagged with `#[jsonrpc_client(base_url)]`",
+            ))
+        }
     };
 
     Ok(quote! {
         #struct_def
 
         #[async_trait::async_trait]
-        impl #traits_to_impl<#inner_type> for #name {
-            async fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <#inner_type as ::jsonrpc_client::SendRequest>::Error> {
-                ::jsonrpc_client::SendRequest::send_request(&#inner_access, self.base_url.clone(), request).await
+        impl #traits_to_impl<#client_ty> for #name {
+            async fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <#client_ty as ::jsonrpc_client::SendRequest>::Error> {
+                ::jsonrpc_client::SendRequest::send_request(&#client_access, #base_url_access.clone(), request).await
             }
         }
     }

@@ -1,0 +1,5 @@
+error: struct needs to have a client and a base URL
+ --> $DIR/client_without_fields.rs:7:1
+  |
+7 | pub struct Client;
+  | ^^^

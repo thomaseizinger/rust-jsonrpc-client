@@ -1,0 +1,5 @@
+error: argument to `version` must be either "1.0" or "2.0"
+ --> $DIR/invalid_version.rs:1:33
+  |
+1 | #[jsonrpc_client::api(version = "blub")]
+  |                                 ^^^^^^

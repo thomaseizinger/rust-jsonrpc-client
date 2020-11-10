@@ -1,0 +1,5 @@
+error: trait methods have to be async
+ --> $DIR/fn_must_be_async.rs:3:5
+  |
+3 |     fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+  |     ^^
