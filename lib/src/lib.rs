@@ -235,19 +235,14 @@ mod tests {
 
         let response = serde_json::from_str::<Response<String>>(json).unwrap();
 
+        assert_eq!(response.id, Id::Number(0));
+        assert_eq!(response.jsonrpc, None);
         assert_eq!(
-            response,
-            Response {
-                id: Id::Number(0),
-                jsonrpc: None,
-                payload: ResponsePayload {
-                    result: None,
-                    error: Some(JsonRpcError {
-                        code: -6,
-                        message: "Insufficient funds".to_owned()
-                    })
-                }
-            }
+            Result::from(response.payload),
+            Err(JsonRpcError {
+                code: -6,
+                message: "Insufficient funds".to_owned()
+            })
         )
     }
 
@@ -257,19 +252,14 @@ mod tests {
 
         let response = serde_json::from_str::<Response<String>>(json).unwrap();
 
+        assert_eq!(response.id, Id::Number(0));
+        assert_eq!(response.jsonrpc, None);
         assert_eq!(
-            response,
-            Response {
-                id: Id::Number(0),
-                jsonrpc: None,
-                payload: ResponsePayload {
-                    result: None,
-                    error: Some(JsonRpcError {
-                        code: -6,
-                        message: "Insufficient funds".to_owned()
-                    })
-                }
-            }
+            Result::from(response.payload),
+            Err(JsonRpcError {
+                code: -6,
+                message: "Insufficient funds".to_owned()
+            })
         )
     }
 
@@ -279,19 +269,14 @@ mod tests {
 
         let response = serde_json::from_str::<Response<()>>(json).unwrap();
 
+        assert_eq!(response.id, Id::Number(0));
+        assert_eq!(response.jsonrpc, None);
         assert_eq!(
-            response,
-            Response {
-                id: Id::Number(0),
-                jsonrpc: None,
-                payload: ResponsePayload {
-                    result: None,
-                    error: Some(JsonRpcError {
-                        code: -6,
-                        message: "Insufficient funds".to_owned()
-                    })
-                }
-            }
+            Result::from(response.payload),
+            Err(JsonRpcError {
+                code: -6,
+                message: "Insufficient funds".to_owned()
+            })
         )
     }
 
@@ -301,19 +286,14 @@ mod tests {
 
         let response = serde_json::from_str::<Response<String>>(json).unwrap();
 
+        assert_eq!(response.id, Id::Number(0));
+        assert_eq!(response.jsonrpc, None);
         assert_eq!(
-            response,
-            Response {
-                id: Id::Number(0),
-                jsonrpc: None,
-                payload: ResponsePayload {
-                    result: None,
-                    error: Some(JsonRpcError {
-                        code: -6,
-                        message: "Insufficient funds".to_owned()
-                    })
-                }
-            }
+            Result::from(response.payload),
+            Err(JsonRpcError {
+                code: -6,
+                message: "Insufficient funds".to_owned()
+            })
         )
     }
 
@@ -323,15 +303,14 @@ mod tests {
 
         let response = serde_json::from_str::<Response<()>>(json).unwrap();
 
+        assert_eq!(response.id, Id::String("1".to_owned()));
+        assert_eq!(response.jsonrpc, Some(Version::V2));
         assert_eq!(
-            response,
-            Response::new_v2_error(
-                Id::String("1".to_owned()),
-                JsonRpcError {
-                    code: -32601,
-                    message: "Method not found".to_owned()
-                }
-            )
+            Result::from(response.payload),
+            Err(JsonRpcError {
+                code: -32601,
+                message: "Method not found".to_owned()
+            })
         )
     }
 
@@ -341,7 +320,9 @@ mod tests {
 
         let response = serde_json::from_str::<Response<i32>>(json).unwrap();
 
-        assert_eq!(response, Response::new_v2_result(Id::Number(1), 19))
+        assert_eq!(response.id, Id::Number(1));
+        assert_eq!(response.jsonrpc, Some(Version::V2));
+        assert_eq!(Result::from(response.payload), Ok(19))
     }
 
     #[test]
@@ -353,6 +334,6 @@ mod tests {
         assert_eq!(
             json,
             r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":[42,23]}"#
-        )
+        );
     }
 }
