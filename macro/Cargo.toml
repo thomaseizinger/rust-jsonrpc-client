@@ -1,14 +1,13 @@
 [package]
 name = "jsonrpc_client_macro"
 version = "0.1.0"
-authors = ["Thomas Eizinger <thomas@eizinger.io>"]
+authors = [ "Thomas Eizinger <thomas@eizinger.io>" ]
 edition = "2018"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 proc-macro = true
 
 [dependencies]
-syn = { version = "1", features = ["full"] }
 quote = "1"
+syn = { version = "1", features = [ "full" ] }

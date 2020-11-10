@@ -16,27 +16,27 @@ This allows us to take away all the boilerplate of making JSON-RPC calls and you
 
 1. Depend on `jsonrpc_client`:
 
-    ```toml
+   ```toml
    [dependencies]
-   jsonrpc_client = { version = "*", features = ["reqwest"] } 
+   jsonrpc_client = { version = "*", features = ["reqwest"] }
    ```
 
 2. Define a trait that describes the JSON-RPC API you want to talk to and annotate it with `#[jsonrpc_client::api]`:
-    ```rust
-    #[jsonrpc_client::api]
-    pub trait Math {
-        async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
-    }
-    ```
+   ```rust
+   #[jsonrpc_client::api]
+   pub trait Math {
+       async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+   }
+   ```
 
 3. Define your client:
-    
-    ```rust
-    #[jsonrpc_client::implement(Math)]
-    struct Client {
-        inner: reqwest::Client,
-        base_url: reqwest::Url
-    }
-    ```
-   
+
+   ```rust
+   #[jsonrpc_client::implement(Math)]
+   struct Client {
+       inner: reqwest::Client,
+       base_url: reqwest::Url,
+   }
+   ```
+
 4. Start using your client!
