@@ -21,10 +21,6 @@ bitcoincore-rpc-json = "0.12.0"
 tokio = { version = "0.3", features = ["macros", "rt-multi-thread"] }
 
 [[example]]
-name = "reqwest_blocking"
-required-features = ["reqwest"]
-
-[[example]]
 name = "reqwest_async"
 required-features = ["reqwest"]
 

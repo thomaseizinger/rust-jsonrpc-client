@@ -4,8 +4,8 @@
 
 - No boilerplate: Driven by proc-macros
 - No client lock-in: Complete freedom over underlying HTTP client
-- Flexible: Sync or async, it is up to you
 - Lightweight: Only depends on syn and serde
+- Async-ready
 
 ## How does it work?
 
@@ -25,7 +25,7 @@ This allows us to take away all the boilerplate of making JSON-RPC calls and you
     ```rust
     #[jsonrpc_client::api]
     pub trait Math {
-        fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+        async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
     }
     ```
 

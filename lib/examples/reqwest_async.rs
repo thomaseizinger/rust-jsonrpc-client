@@ -5,7 +5,7 @@ pub trait Math {
     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 }
 
-#[jsonrpc_client::implement_async(Math)]
+#[jsonrpc_client::implement(Math)]
 struct Client {
     inner: reqwest::Client,
     base_url: reqwest::Url,

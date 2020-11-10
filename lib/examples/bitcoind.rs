@@ -5,25 +5,26 @@ use testcontainers::*;
 
 #[jsonrpc_client::api(version = "1.0")]
 pub trait BitcoindRpc {
-    fn getblockchaininfo(&self) -> GetBlockchainInfoResult;
+    async fn getblockchaininfo(&self) -> GetBlockchainInfoResult;
 }
 
 #[jsonrpc_client::implement(BitcoindRpc)]
 struct Client {
-    inner: reqwest::blocking::Client,
+    inner: reqwest::Client,
     base_url: reqwest::Url,
 }
 
 impl Client {
     fn new(base_url: String) -> Result<Self> {
         Ok(Self {
-            inner: reqwest::blocking::Client::new(),
+            inner: reqwest::Client::new(),
             base_url: base_url.parse()?,
         })
     }
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let cli = clients::Cli::default();
     let container = cli.run(BitcoinCore::default());
     let auth = container.image().auth();
@@ -37,7 +38,7 @@ fn main() -> Result<()> {
             .context("port 18443 was not exposed")?
     ))?;
 
-    let blockchain_info = client.getblockchaininfo()?;
+    let blockchain_info = client.getblockchaininfo().await?;
 
     println!("{:?}", blockchain_info);
 

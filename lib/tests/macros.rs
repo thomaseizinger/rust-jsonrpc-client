@@ -1,4 +1,4 @@
-use jsonrpc_client::{Id, Response, SendRequest, SendRequestAsync};
+use jsonrpc_client::{Id, Response, SendRequest};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::cell::Cell;
@@ -8,21 +8,16 @@ use url::Url;
 
 #[jsonrpc_client::api(version = "1.0")]
 pub trait MathV1 {
-    fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+    async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 }
 
 #[jsonrpc_client::api(version = "2.0")]
 pub trait MathV2 {
-    fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+    async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 }
 
 #[jsonrpc_client::api(version = "2.0")]
 pub trait MathV2Default {
-    fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
-}
-
-#[jsonrpc_client::api(version = "2.0")]
-pub trait AsyncMath {
     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 }
 
@@ -61,22 +56,8 @@ impl fmt::Display for DummyError {
 
 impl std::error::Error for DummyError {}
 
-impl SendRequest for InnerClient {
-    type Error = DummyError;
-
-    fn send_request<P>(&self, _: Url, request: String) -> Result<Response<P>, Self::Error>
-    where
-        P: DeserializeOwned,
-    {
-        self.recorded_request.set(Some(request));
-        let response = self.next_response.replace(None).unwrap();
-
-        Ok(serde_json::from_str(&response).unwrap())
-    }
-}
-
 #[async_trait::async_trait]
-impl SendRequestAsync for InnerClient {
+impl SendRequest for InnerClient {
     type Error = DummyError;
 
     async fn send_request<P>(&self, _: Url, request: String) -> Result<Response<P>, Self::Error>
@@ -135,17 +116,6 @@ mod derive_on_named_inner_multiple_fields {
     }
 }
 
-mod async_client {
-    use crate::{ExampleDotOrg, InnerClient};
-
-    #[jsonrpc_client::implement_async(super::AsyncMath)]
-    #[derive(Default)]
-    pub struct Client {
-        pub inner: InnerClient,
-        pub base_url: ExampleDotOrg,
-    }
-}
-
 // TODO: test for attr on multiple fields
 // TODO: test for tagged fields
 
@@ -157,14 +127,14 @@ fn test_impls_math_api() {
     assert_impls_math_v2_default(derive_on_named_inner_multiple_fields::Client::default());
 }
 
-#[test]
-fn creates_correct_v1_request() {
+#[tokio::test]
+async fn creates_correct_v1_request() {
     let client = derive_on_named_inner::Client {
         inner: InnerClient::with_next_response(Response::new_v1_result(Id::Number(1), 1)),
         ..derive_on_named_inner::Client::default()
     };
 
-    let result = MathV1::subtract(&client, 5, 4).unwrap();
+    let result = MathV1::subtract(&client, 5, 4).await.unwrap();
 
     assert_eq!(result, 1);
     assert_eq!(
@@ -173,30 +143,14 @@ fn creates_correct_v1_request() {
     );
 }
 
-#[test]
-fn creates_correct_v2_request() {
+#[tokio::test]
+async fn creates_correct_v2_request() {
     let client = derive_on_named_inner::Client {
         inner: InnerClient::with_next_response(Response::new_v2_result(Id::Number(1), 1)),
         ..derive_on_named_inner::Client::default()
     };
 
-    let result = MathV2::subtract(&client, 5, 4).unwrap();
-
-    assert_eq!(result, 1);
-    assert_eq!(
-        client.inner.take_recorded_request(),
-        r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":[5,4]}"#
-    );
-}
-
-#[test]
-fn creates_correct_v2_default_request() {
-    let client = derive_on_named_inner::Client {
-        inner: InnerClient::with_next_response(Response::new_v2_result(Id::Number(1), 1)),
-        ..derive_on_named_inner::Client::default()
-    };
-
-    let result = MathV2Default::subtract(&client, 5, 4).unwrap();
+    let result = MathV2::subtract(&client, 5, 4).await.unwrap();
 
     assert_eq!(result, 1);
     assert_eq!(
@@ -206,13 +160,13 @@ fn creates_correct_v2_default_request() {
 }
 
 #[tokio::test]
-async fn async_client() {
-    let client = async_client::Client {
+async fn creates_correct_v2_default_request() {
+    let client = derive_on_named_inner::Client {
         inner: InnerClient::with_next_response(Response::new_v2_result(Id::Number(1), 1)),
-        ..async_client::Client::default()
+        ..derive_on_named_inner::Client::default()
     };
 
-    let result = AsyncMath::subtract(&client, 5, 4).await.unwrap();
+    let result = MathV2Default::subtract(&client, 5, 4).await.unwrap();
 
     assert_eq!(result, 1);
     assert_eq!(
