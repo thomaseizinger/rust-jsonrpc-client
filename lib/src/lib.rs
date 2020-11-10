@@ -64,7 +64,10 @@ impl<P> Response<P> {
         Self {
             id,
             jsonrpc: Some(Version::V1),
-            payload: ResponsePayload::Result(result),
+            payload: ResponsePayload {
+                result: Some(result),
+                error: None,
+            },
         }
     }
 
@@ -72,7 +75,10 @@ impl<P> Response<P> {
         Self {
             id,
             jsonrpc: Some(Version::V2),
-            payload: ResponsePayload::Result(result),
+            payload: ResponsePayload {
+                result: Some(result),
+                error: None,
+            },
         }
     }
 
@@ -80,30 +86,56 @@ impl<P> Response<P> {
         Self {
             id,
             jsonrpc: Some(Version::V1),
-            payload: ResponsePayload::Error(error),
+            payload: ResponsePayload {
+                result: None,
+                error: Some(error),
+            },
         }
     }
     pub fn new_v2_error(id: Id, error: JsonRpcError) -> Self {
         Self {
             id,
             jsonrpc: Some(Version::V2),
-            payload: ResponsePayload::Error(error),
+            payload: ResponsePayload {
+                result: None,
+                error: Some(error),
+            },
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub enum ResponsePayload<P> {
-    Result(P),
-    Error(JsonRpcError),
+pub struct ResponsePayload<P> {
+    result: Option<P>,
+    error: Option<JsonRpcError>,
 }
 
 impl<P> From<ResponsePayload<P>> for Result<P, JsonRpcError> {
-    fn from(payload: ResponsePayload<P>) -> Self {
-        match payload {
-            ResponsePayload::Result(result) => Ok(result),
-            ResponsePayload::Error(e) => Err(e),
+    fn from(value: ResponsePayload<P>) -> Self {
+        match value {
+            ResponsePayload {
+                error: Some(error),
+                result: None,
+            } => Err(error),
+            ResponsePayload {
+                error: None,
+                result: Some(ok),
+            } => Ok(ok),
+            ResponsePayload {
+                error: Some(_),
+                result: Some(_),
+            } => Err(JsonRpcError {
+                code: -32603,
+                message: "invalid JSON-RPC response, got both `result` and `error`".to_string(),
+            }),
+            ResponsePayload {
+                error: None,
+                result: None,
+            } => Err(JsonRpcError {
+                code: -32603,
+                message: "invalid JSON-RPC response, got neither `result` nor `error`".to_string(),
+            }),
         }
     }
 }
@@ -198,7 +230,95 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn deserialize_error_response() {
+    fn deserialize_v1_error_response_error_first_result_second() {
+        let json = r#"{"error":{"code":-6,"message":"Insufficient funds"},"result":null,"id":0}"#;
+
+        let response = serde_json::from_str::<Response<String>>(json).unwrap();
+
+        assert_eq!(
+            response,
+            Response {
+                id: Id::Number(0),
+                jsonrpc: None,
+                payload: ResponsePayload {
+                    result: None,
+                    error: Some(JsonRpcError {
+                        code: -6,
+                        message: "Insufficient funds".to_owned()
+                    })
+                }
+            }
+        )
+    }
+
+    #[test]
+    fn deserialize_v1_error_response_result_first_error_second() {
+        let json = r#"{"result":null,"error":{"code":-6,"message":"Insufficient funds"},"id":0}"#;
+
+        let response = serde_json::from_str::<Response<String>>(json).unwrap();
+
+        assert_eq!(
+            response,
+            Response {
+                id: Id::Number(0),
+                jsonrpc: None,
+                payload: ResponsePayload {
+                    result: None,
+                    error: Some(JsonRpcError {
+                        code: -6,
+                        message: "Insufficient funds".to_owned()
+                    })
+                }
+            }
+        )
+    }
+
+    #[test]
+    fn deserialize_v1_error_response_result_first_error_second_unit_type() {
+        let json = r#"{"result":null,"error":{"code":-6,"message":"Insufficient funds"},"id":0}"#;
+
+        let response = serde_json::from_str::<Response<()>>(json).unwrap();
+
+        assert_eq!(
+            response,
+            Response {
+                id: Id::Number(0),
+                jsonrpc: None,
+                payload: ResponsePayload {
+                    result: None,
+                    error: Some(JsonRpcError {
+                        code: -6,
+                        message: "Insufficient funds".to_owned()
+                    })
+                }
+            }
+        )
+    }
+
+    #[test]
+    fn deserialize_v1_error_no_result() {
+        let json = r#"{"error":{"code":-6,"message":"Insufficient funds"},"id":0}"#;
+
+        let response = serde_json::from_str::<Response<String>>(json).unwrap();
+
+        assert_eq!(
+            response,
+            Response {
+                id: Id::Number(0),
+                jsonrpc: None,
+                payload: ResponsePayload {
+                    result: None,
+                    error: Some(JsonRpcError {
+                        code: -6,
+                        message: "Insufficient funds".to_owned()
+                    })
+                }
+            }
+        )
+    }
+
+    #[test]
+    fn deserialize_v2_error_response() {
         let json = r#"{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "1"}"#;
 
         let response = serde_json::from_str::<Response<()>>(json).unwrap();
