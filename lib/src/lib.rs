@@ -15,19 +15,36 @@ pub enum Id {
     String(String),
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum Version {
+    #[serde(rename = "1.0")]
+    V1,
+    #[serde(rename = "2.0")]
+    V2,
+}
+
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct Request {
     pub id: Id,
-    pub jsonrpc: String,
+    pub jsonrpc: Version,
     pub method: String,
     pub params: Vec<serde_json::Value>,
 }
 
 impl Request {
+    pub fn new_v1(method: &str, params: Vec<serde_json::Value>) -> Self {
+        Self {
+            id: Id::Number(0),
+            jsonrpc: Version::V1,
+            method: method.to_owned(),
+            params,
+        }
+    }
+
     pub fn new_v2(method: &str, params: Vec<serde_json::Value>) -> Self {
         Self {
             id: Id::Number(0),
-            jsonrpc: String::from("2.0"),
+            jsonrpc: Version::V2,
             method: method.to_owned(),
             params,
         }
@@ -37,24 +54,39 @@ impl Request {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Response<P> {
     pub id: Id,
-    pub jsonrpc: Option<String>,
+    pub jsonrpc: Option<Version>,
     #[serde(flatten)]
     pub payload: ResponsePayload<P>,
 }
 
 impl<P> Response<P> {
-    pub fn new_v2_result(id: Id, result: P) -> Self {
+    pub fn new_v1_result(id: Id, result: P) -> Self {
         Self {
             id,
-            jsonrpc: Some(String::from("2.0")),
+            jsonrpc: Some(Version::V1),
             payload: ResponsePayload::Result(result),
         }
     }
 
+    pub fn new_v2_result(id: Id, result: P) -> Self {
+        Self {
+            id,
+            jsonrpc: Some(Version::V2),
+            payload: ResponsePayload::Result(result),
+        }
+    }
+
+    pub fn new_v1_error(id: Id, error: JsonRpcError) -> Self {
+        Self {
+            id,
+            jsonrpc: Some(Version::V1),
+            payload: ResponsePayload::Error(error),
+        }
+    }
     pub fn new_v2_error(id: Id, error: JsonRpcError) -> Self {
         Self {
             id,
-            jsonrpc: Some(String::from("2.0")),
+            jsonrpc: Some(Version::V2),
             payload: ResponsePayload::Error(error),
         }
     }

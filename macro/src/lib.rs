@@ -1,13 +1,13 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::spanned::Spanned;
-use syn::{Error, FnArg, ItemStruct, Meta, NestedMeta, Path, TraitItemMethod};
-use syn::{ItemTrait, Pat};
-use syn::{ReturnType, TraitItem};
+use syn::{
+    spanned::Spanned, Error, FnArg, ItemStruct, ItemTrait, Lit, Meta, MetaNameValue, NestedMeta,
+    Pat, Path, ReturnType, TraitItem, TraitItemMethod,
+};
 
 #[proc_macro_attribute]
-pub fn api(_: TokenStream, input: TokenStream) -> TokenStream {
-    match make_new_trait(input) {
+pub fn api(attr: TokenStream, item: TokenStream) -> TokenStream {
+    match make_new_trait(item, attr) {
         Ok(output) => output,
         Err(e) => e.to_compile_error().into(),
     }
@@ -21,8 +21,36 @@ pub fn implement(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 }
 
-fn make_new_trait(input: TokenStream) -> Result<TokenStream, Error> {
+enum Version {
+    One,
+    Two,
+}
+
+fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, Error> {
     let trait_def = syn::parse::<ItemTrait>(input)?;
+    let version = if attr.is_empty() {
+        Version::Two
+    } else {
+        let meta_name_value = syn::parse::<MetaNameValue>(attr)?;
+
+        if !meta_name_value.path.is_ident("version") {
+            return Err(Error::new(
+                meta_name_value.path.span(),
+                "invalid configuration attribute, currently only `version` is supported",
+            ));
+        }
+
+        match meta_name_value.lit {
+            Lit::Str(str_lit) if str_lit.value() == "1.0" => Version::One,
+            Lit::Str(str_lit) if str_lit.value() == "2.0" => Version::Two,
+            _ => {
+                return Err(Error::new(
+                    meta_name_value.lit.span(),
+                    r#"argument to `version` must be either "1.0" or "2.0""#,
+                ))
+            }
+        }
+    };
 
     let ItemTrait { items, ident, .. } = trait_def;
 
@@ -75,11 +103,15 @@ fn make_new_trait(input: TokenStream) -> Result<TokenStream, Error> {
             .map(|argument| quote! { ::serde_json::to_value(&#argument)? })
             .collect::<Vec<_>>();
 
+        let new_request_fn = match version {
+            Version::One => quote! { new_v1 },
+            Version::Two => quote! { new_v2 }
+        };
 
         Ok(quote! {
             fn #method_ident(#inputs) -> Result<#return_type, ::jsonrpc_client::Error<<C as ::jsonrpc_client::SendRequest>::Error>> {
                 let parameters = vec![ #(#serialized_arguments),* ];
-                let request = ::jsonrpc_client::Request::new_v2(stringify!(#method_ident), parameters);
+                let request = ::jsonrpc_client::Request::#new_request_fn(stringify!(#method_ident), parameters);
                 let request = ::serde_json::to_string(&request)?;
 
                 let response = self.send_request::<#return_type>(request).map_err(::jsonrpc_client::Error::Client)?;
