@@ -1,7 +1,7 @@
 #[cfg(feature = "reqwest")]
 mod reqwest;
 
-pub use jsonrpc_client_macro::{api, implement};
+pub use jsonrpc_client_macro::{api, implement, implement_async};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::error::Error as StdError;
@@ -174,7 +174,20 @@ where
 pub trait SendRequest {
     type Error: StdError;
 
-    fn send_request<P>(&self, url: Url, body: String) -> Result<Response<P>, Self::Error>
+    fn send_request<P>(&self, endpoint: Url, body: String) -> Result<Response<P>, Self::Error>
+    where
+        P: DeserializeOwned;
+}
+
+#[async_trait::async_trait]
+pub trait SendRequestAsync: 'static {
+    type Error: StdError;
+
+    async fn send_request<P>(
+        &self,
+        endpoint: Url,
+        body: String,
+    ) -> Result<Response<P>, Self::Error>
     where
         P: DeserializeOwned;
 }

@@ -1,4 +1,4 @@
-use jsonrpc_client::{Id, Response, SendRequest};
+use jsonrpc_client::{Id, Response, SendRequest, SendRequestAsync};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::cell::Cell;
@@ -21,11 +21,18 @@ pub trait MathV2Default {
     fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 }
 
+#[jsonrpc_client::api(version = "2.0")]
+pub trait AsyncMath {
+    async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+}
+
 #[derive(Default)]
 pub struct InnerClient {
     next_response: Cell<Option<String>>,
     recorded_request: Cell<Option<String>>,
 }
+
+unsafe impl Sync for InnerClient {}
 
 impl InnerClient {
     fn with_next_response<P>(response: Response<P>) -> Self
@@ -58,6 +65,21 @@ impl SendRequest for InnerClient {
     type Error = DummyError;
 
     fn send_request<P>(&self, _: Url, request: String) -> Result<Response<P>, Self::Error>
+    where
+        P: DeserializeOwned,
+    {
+        self.recorded_request.set(Some(request));
+        let response = self.next_response.replace(None).unwrap();
+
+        Ok(serde_json::from_str(&response).unwrap())
+    }
+}
+
+#[async_trait::async_trait]
+impl SendRequestAsync for InnerClient {
+    type Error = DummyError;
+
+    async fn send_request<P>(&self, _: Url, request: String) -> Result<Response<P>, Self::Error>
     where
         P: DeserializeOwned,
     {
@@ -113,9 +135,19 @@ mod derive_on_named_inner_multiple_fields {
     }
 }
 
+mod async_client {
+    use crate::{ExampleDotOrg, InnerClient};
+
+    #[jsonrpc_client::implement_async(super::AsyncMath)]
+    #[derive(Default)]
+    pub struct Client {
+        pub inner: InnerClient,
+        pub base_url: ExampleDotOrg,
+    }
+}
+
 // TODO: test for attr on multiple fields
 // TODO: test for tagged fields
-// TODO: test for two APIs
 
 #[test]
 fn test_impls_math_api() {
@@ -165,6 +197,22 @@ fn creates_correct_v2_default_request() {
     };
 
     let result = MathV2Default::subtract(&client, 5, 4).unwrap();
+
+    assert_eq!(result, 1);
+    assert_eq!(
+        client.inner.take_recorded_request(),
+        r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":[5,4]}"#
+    );
+}
+
+#[tokio::test]
+async fn async_client() {
+    let client = async_client::Client {
+        inner: InnerClient::with_next_response(Response::new_v2_result(Id::Number(1), 1)),
+        ..async_client::Client::default()
+    };
+
+    let result = AsyncMath::subtract(&client, 5, 4).await.unwrap();
 
     assert_eq!(result, 1);
     assert_eq!(

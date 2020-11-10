@@ -12,14 +12,20 @@ serde_json = "1"
 jsonrpc_client_macro = { path = "../macro" }
 reqwest = { version = "0.10", features = ["blocking", "json"], optional = true }
 url = "2"
+async-trait = "0.1"
 
 [dev-dependencies]
 anyhow = "1"
 testcontainers = "0.11"
 bitcoincore-rpc-json = "0.12.0"
+tokio = { version = "0.3", features = ["macros", "rt-multi-thread"] }
 
 [[example]]
 name = "reqwest_blocking"
+required-features = ["reqwest"]
+
+[[example]]
+name = "reqwest_async"
 required-features = ["reqwest"]
 
 [[example]]

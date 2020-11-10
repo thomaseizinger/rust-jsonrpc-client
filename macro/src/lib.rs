@@ -21,6 +21,14 @@ pub fn implement(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 }
 
+#[proc_macro_attribute]
+pub fn implement_async(attr: TokenStream, item: TokenStream) -> TokenStream {
+    match make_async_api_impl(item, attr) {
+        Ok(output) => output,
+        Err(e) => e.to_compile_error().into(),
+    }
+}
+
 enum Version {
     One,
     Two,
@@ -62,7 +70,11 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    let new_methods = methods.into_iter().map(|method| {
+    let mut any_method_async = false;
+
+    let mut new_methods = Vec::with_capacity(methods.len());
+
+    for method in methods {
         if method.default.is_some() {
             return Err(Error::new(
                 method.span(),
@@ -72,10 +84,21 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 
         let TraitItemMethod { sig, .. } = method;
 
-        // TODO: Check async and const
+        // TODO: Check const
 
         let method_ident = sig.ident;
         let inputs = sig.inputs;
+
+        if sig.asyncness.is_some() {
+            any_method_async = true;
+        }
+
+        if any_method_async && sig.asyncness.is_none() {
+            return Err(Error::new(
+                sig.asyncness.span(),
+                "either all or none of the traits methods have to be async",
+            ));
+        }
 
         let arguments = inputs
             .iter()
@@ -92,46 +115,82 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 
         let return_type = match sig.output {
             ReturnType::Default => quote! {
-                ()
-             },
+               ()
+            },
             ReturnType::Type(_, return_type) => quote! {
                 #return_type
-            }
+            },
         };
 
-        let serialized_arguments = arguments.iter()
+        let async_token = match sig.asyncness {
+            Some(_) => quote! { async },
+            None => quote! {},
+        };
+
+        let serialized_arguments = arguments
+            .iter()
             .map(|argument| quote! { ::serde_json::to_value(&#argument)? })
             .collect::<Vec<_>>();
 
         let new_request_fn = match version {
             Version::One => quote! { new_v1 },
-            Version::Two => quote! { new_v2 }
+            Version::Two => quote! { new_v2 },
         };
 
-        Ok(quote! {
-            fn #method_ident(#inputs) -> Result<#return_type, ::jsonrpc_client::Error<<C as ::jsonrpc_client::SendRequest>::Error>> {
+        let send_request_call = match sig.asyncness {
+            Some(_) => quote! {
+                self.send_request::<#return_type>(request).await.map_err(::jsonrpc_client::Error::Client)?;
+            },
+            None => quote! {
+                self.send_request::<#return_type>(request).map_err(::jsonrpc_client::Error::Client)?;
+            },
+        };
+
+        let trait_bound = match sig.asyncness {
+            Some(_) => quote! {
+                ::jsonrpc_client::SendRequestAsync
+            },
+            None => quote! {
+                ::jsonrpc_client::SendRequest
+            },
+        };
+
+        let method = quote! {
+            #async_token fn #method_ident(#inputs) -> Result<#return_type, ::jsonrpc_client::Error<<C as #trait_bound>::Error>> {
                 let parameters = vec![ #(#serialized_arguments),* ];
                 let request = ::jsonrpc_client::Request::#new_request_fn(stringify!(#method_ident), parameters);
                 let request = ::serde_json::to_string(&request)?;
 
-                let response = self.send_request::<#return_type>(request).map_err(::jsonrpc_client::Error::Client)?;
+                let response = #send_request_call
                 let success = Result::from(response.payload).map_err(::jsonrpc_client::Error::JsonRpc)?;
 
                 Ok(success)
             }
-        })
-    }).collect::<Result<Vec<_>, _>>()?;
+        };
+
+        new_methods.push(method);
+    }
 
     // TODO: handle visibility properly
 
-    Ok(quote! {
-        trait #ident<C> where C: ::jsonrpc_client::SendRequest {
-            #(#new_methods)*
+    Ok(if any_method_async {
+        quote! {
+            #[async_trait::async_trait]
+            trait #ident<C> where C: ::jsonrpc_client::SendRequestAsync {
+                #(#new_methods)*
 
-            fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <C as ::jsonrpc_client::SendRequest>::Error>;
+                async fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <C as ::jsonrpc_client::SendRequestAsync>::Error>;
+            }
         }
-    }
-    .into())
+    } else {
+        quote! {
+            trait #ident<C> where C: ::jsonrpc_client::SendRequest {
+                #(#new_methods)*
+
+                fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <C as ::jsonrpc_client::SendRequest>::Error>;
+            }
+        }
+    }.into())
 }
 
 fn make_api_impl(item: TokenStream, attr: TokenStream) -> Result<TokenStream, Error> {
@@ -205,6 +264,84 @@ fn make_api_impl(item: TokenStream, attr: TokenStream) -> Result<TokenStream, Er
         impl #traits_to_impl<#inner_type> for #name {
             fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <#inner_type as ::jsonrpc_client::SendRequest>::Error> {
                 ::jsonrpc_client::SendRequest::send_request(&#inner_access, self.base_url.clone(), request)
+            }
+        }
+    }
+        .into())
+}
+
+fn make_async_api_impl(item: TokenStream, attr: TokenStream) -> Result<TokenStream, Error> {
+    let struct_def = syn::parse::<ItemStruct>(item)?;
+    let traits_to_impl = syn::parse::<Path>(attr)?;
+
+    let name = &struct_def.ident;
+
+    if struct_def.fields.is_empty() {
+        return Err(Error::new(
+            struct_def.span(),
+            "struct needs to have at least one field",
+        ));
+    }
+
+    let (index, client) = if struct_def.fields.len() == 1 {
+        struct_def
+            .fields
+            .iter()
+            .enumerate()
+            .next()
+            .expect("must have field at this stage")
+    } else {
+        let tagged_inner = struct_def.fields.iter().enumerate().find(|(_, field)| {
+            field
+                .attrs
+                .iter()
+                .find(|attr| attr.path.is_ident("jsonrpc_client"))
+                .filter(|attr| match attr.parse_meta() {
+                    Ok(Meta::List(list)) => match list.nested.first() {
+                        Some(NestedMeta::Meta(Meta::Path(path))) => path.is_ident("inner"),
+                        _ => false,
+                    },
+                    _ => false,
+                })
+                .is_some()
+        });
+
+        let named_inner = struct_def.fields.iter().enumerate().find(|(_, field)| {
+            field
+                .ident
+                .as_ref()
+                .map(|ident| ident == "inner")
+                .unwrap_or(false)
+        });
+
+        match tagged_inner.or(named_inner) {
+            Some(field) => field,
+            None => return Err(Error::new(
+                struct_def.span(),
+                "struct needs to have either a field named `inner` or one tagged with `#[jsonrpc_client(inner)]`",
+            ))
+        }
+    };
+
+    let inner_type = &client.ty;
+    let index = syn::Index::from(index);
+
+    let inner_access = match &client.ident {
+        Some(ident) => quote! {
+            self.#ident
+        },
+        None => quote! {
+            self.#index
+        },
+    };
+
+    Ok(quote! {
+        #struct_def
+
+        #[async_trait::async_trait]
+        impl #traits_to_impl<#inner_type> for #name {
+            async fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <#inner_type as ::jsonrpc_client::SendRequestAsync>::Error> {
+                ::jsonrpc_client::SendRequestAsync::send_request(&#inner_access, self.base_url.clone(), request).await
             }
         }
     }
