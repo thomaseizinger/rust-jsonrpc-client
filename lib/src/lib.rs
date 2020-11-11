@@ -48,6 +48,9 @@ pub mod surf;
 #[cfg(feature = "isahc")]
 mod isahc;
 
+#[cfg(feature = "awc")]
+pub mod awc;
+
 /// Define the API of the JSON-RPC server you want to talk to.
 ///
 /// All methods of this trait must be `async`. Additionally, the trait cannot have other items such as `const` or `type` declarations.
