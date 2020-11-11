@@ -3,6 +3,9 @@ name = "jsonrpc_client_macro"
 version = "0.1.0"
 authors = [ "Thomas Eizinger <thomas@eizinger.io>" ]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thomaseizinger/rust-jsonrpc-client"
+description = "Internal proc-macro crate for `jsonrpc_client`."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
