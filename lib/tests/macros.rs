@@ -117,7 +117,6 @@ mod derive_on_named_inner_multiple_fields {
 }
 
 // TODO: test for attr on multiple fields
-// TODO: test for tagged fields
 
 #[test]
 fn test_impls_math_api() {

@@ -1,5 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
+use quote::quote_spanned;
 use syn::{
     spanned::Spanned, Error, Field, Fields, FnArg, ItemStruct, ItemTrait, Lit, Meta, MetaNameValue,
     NestedMeta, Pat, Path, ReturnType, TraitItem, TraitItemMethod,
@@ -62,7 +63,7 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    let new_methods = methods.into_iter().map(|method| {
+    let new_methods = methods.iter().map(|method| {
         if method.default.is_some() {
             return Err(Error::new(
                 method.default.span(),
@@ -82,13 +83,13 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
             .filter_map(|input| match input {
                 FnArg::Receiver(_) => None,
                 FnArg::Typed(arg) => match &*arg.pat {
-                    Pat::Ident(ident) => Some(ident.ident.clone()),
+                    Pat::Ident(ident) => Some((&ident.ident, &arg.ty)),
                     _ => None,
                 },
             })
             .collect::<Vec<_>>();
 
-        let return_type = match method.sig.output {
+        let return_type = match &method.sig.output {
             ReturnType::Default => quote! {
                ()
             },
@@ -99,15 +100,15 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 
         let serialized_arguments = arguments
             .iter()
-            .map(|argument| quote! { ::serde_json::to_value(&#argument)? })
+            .map(|(argument, ty)| quote_spanned! { ty.span() => ::serde_json::to_value(&#argument)? })
             .collect::<Vec<_>>();
 
         let new_request_fn = match version {
             Version::One => quote! { new_v1 },
             Version::Two => quote! { new_v2 },
         };
-        let method_ident = method.sig.ident;
-        let inputs = method.sig.inputs;
+        let method_ident = &method.sig.ident;
+        let inputs = &method.sig.inputs;
 
         Ok(quote! {
             async fn #method_ident(#inputs) -> Result<#return_type, ::jsonrpc_client::Error<<C as ::jsonrpc_client::SendRequest>::Error>> {
