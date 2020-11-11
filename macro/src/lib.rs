@@ -110,13 +110,22 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
         let method_ident = &method.sig.ident;
         let inputs = &method.sig.inputs;
 
+        let send_request_call = match &method.sig.output {
+            ReturnType::Default => quote! {
+               self.send_request::<#return_type>(request).await.map_err(::jsonrpc_client::Error::Client)?;
+            },
+            ReturnType::Type(_, return_type) => quote_spanned! { return_type.span() =>
+                self.send_request::<#return_type>(request).await.map_err(::jsonrpc_client::Error::Client)?;
+            },
+        };
+
         Ok(quote! {
             async fn #method_ident(#inputs) -> Result<#return_type, ::jsonrpc_client::Error<<C as ::jsonrpc_client::SendRequest>::Error>> {
                 let parameters = vec![ #(#serialized_arguments),* ];
                 let request = ::jsonrpc_client::Request::#new_request_fn(stringify!(#method_ident), parameters);
                 let request = ::serde_json::to_string(&request)?;
 
-                let response = self.send_request::<#return_type>(request).await.map_err(::jsonrpc_client::Error::Client)?;
+                let response = #send_request_call
                 let success = Result::from(response.payload).map_err(::jsonrpc_client::Error::JsonRpc)?;
 
                 Ok(success)

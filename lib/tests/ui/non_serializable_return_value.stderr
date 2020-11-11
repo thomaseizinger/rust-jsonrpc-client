@@ -1,0 +1,7 @@
+error[E0277]: the trait bound `for<'de> Number: serde::Deserialize<'de>` is not satisfied
+ --> $DIR/non_serializable_return_value.rs:5:64
+  |
+5 |     async fn subtract(&self, subtrahend: i64, minuend: i64) -> Number;
+  |                                                                ^^^^^^ the trait `for<'de> serde::Deserialize<'de>` is not implemented for `Number`
+  |
+  = note: required because of the requirements on the impl of `serde::de::DeserializeOwned` for `Number`
