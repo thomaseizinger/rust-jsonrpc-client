@@ -28,7 +28,7 @@ tokio = { version = "0.3", features = [ "macros", "rt-multi-thread" ] }
 trybuild = "1.0"
 
 [[example]]
-name = "reqwest_async"
+name = "reqwest"
 required-features = [ "reqwest" ]
 
 [[example]]
