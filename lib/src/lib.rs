@@ -45,6 +45,9 @@ mod reqwest;
 #[cfg(feature = "surf")]
 pub mod surf;
 
+#[cfg(feature = "isahc")]
+pub mod isahc;
+
 /// Define the API of the JSON-RPC server you want to talk to.
 ///
 /// All methods of this trait must be `async`. Additionally, the trait cannot have other items such as `const` or `type` declarations.
@@ -96,10 +99,11 @@ pub use jsonrpc_client_macro::api;
 /// ```
 pub use jsonrpc_client_macro::implement;
 
+pub use url::Url;
+
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::error::Error as StdError;
 use std::fmt::{self, Debug};
-use url::Url;
 
 /// The ID of a JSON-RPC request.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -313,9 +317,8 @@ where
 /// # Example
 ///
 /// ```rust,no_run
-/// # use url::Url;
 /// # use serde::de::DeserializeOwned;
-/// # use jsonrpc_client::{Response, SendRequest};
+/// # use jsonrpc_client::{Response, SendRequest, Url};
 /// struct MyHttpClient;
 ///
 /// #[async_trait::async_trait]

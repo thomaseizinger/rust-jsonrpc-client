@@ -8,7 +8,7 @@ pub trait Math {
 #[jsonrpc_client::implement(Math)]
 struct Client {
     inner: reqwest::Client,
-    base_url: reqwest::Url,
+    base_url: jsonrpc_client::Url,
 }
 
 impl Client {

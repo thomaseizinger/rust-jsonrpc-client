@@ -13,6 +13,7 @@ description = "An async, macro-driven JSON-RPC client with pluggable backends."
 
 [dependencies]
 async-trait = "0.1"
+isahc = { version = "0.9", optional = true, features = [ "json" ] }
 jsonrpc_client_macro = { path = "../macro" }
 reqwest = { version = "0.10", features = [ "json" ], optional = true }
 serde = { version = "1", features = [ "derive" ] }
@@ -43,3 +44,7 @@ required-features = [ "reqwest" ]
 [[example]]
 name = "surf"
 required-features = [ "surf" ]
+
+[[example]]
+name = "isahc"
+required-features = [ "isahc" ]

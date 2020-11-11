@@ -1,5 +1,5 @@
-use crate::{Response, SendRequest};
-use reqwest::{header::CONTENT_TYPE, Url};
+use crate::{Response, SendRequest, Url};
+use reqwest::header::CONTENT_TYPE;
 use serde::de::DeserializeOwned;
 
 #[async_trait::async_trait]

@@ -1,8 +1,7 @@
-use crate::{Response, SendRequest};
+use crate::{Response, SendRequest, Url};
 use serde::de::DeserializeOwned;
 use std::fmt;
 use surf::http::Method;
-use url::Url;
 
 #[derive(Debug)]
 pub struct Error(pub surf::Error);

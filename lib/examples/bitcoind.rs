@@ -11,7 +11,7 @@ pub trait BitcoindRpc {
 #[jsonrpc_client::implement(BitcoindRpc)]
 struct Client {
     inner: reqwest::Client,
-    base_url: reqwest::Url,
+    base_url: jsonrpc_client::Url,
 }
 
 impl Client {

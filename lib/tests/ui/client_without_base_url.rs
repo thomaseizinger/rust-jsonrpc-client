@@ -1,7 +1,7 @@
 use jsonrpc_client::Response;
 use jsonrpc_client::SendRequest;
+use jsonrpc_client::Url;
 use serde::de::DeserializeOwned;
-use url::Url;
 
 #[jsonrpc_client::api]
 pub trait Math {

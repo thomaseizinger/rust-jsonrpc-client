@@ -7,14 +7,14 @@ pub trait Math {
 
 #[jsonrpc_client::implement(Math)]
 struct Client {
-    inner: surf::Client,
+    inner: isahc::HttpClient,
     base_url: jsonrpc_client::Url,
 }
 
 impl Client {
     fn new(base_url: String) -> Result<Self> {
         Ok(Self {
-            inner: surf::Client::new(),
+            inner: isahc::HttpClient::new()?,
             base_url: base_url.parse()?,
         })
     }
