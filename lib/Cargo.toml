@@ -17,6 +17,7 @@ jsonrpc_client_macro = { path = "../macro" }
 reqwest = { version = "0.10", features = [ "json" ], optional = true }
 serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
+surf = { version = "2.1.0", optional = true }
 url = "2"
 
 [dev-dependencies]
@@ -38,3 +39,7 @@ required-features = [ "reqwest" ]
 [[example]]
 name = "bitcoind"
 required-features = [ "reqwest" ]
+
+[[example]]
+name = "surf"
+required-features = [ "surf" ]

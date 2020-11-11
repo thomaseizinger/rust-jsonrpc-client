@@ -42,6 +42,9 @@
 #[cfg(feature = "reqwest")]
 mod reqwest;
 
+#[cfg(feature = "surf")]
+pub mod surf;
+
 /// Define the API of the JSON-RPC server you want to talk to.
 ///
 /// All methods of this trait must be `async`. Additionally, the trait cannot have other items such as `const` or `type` declarations.
