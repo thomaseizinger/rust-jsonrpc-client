@@ -27,7 +27,6 @@ enum Version {
     Two,
 }
 
-// TODO: Assert that all arguments implement Serialize
 fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, Error> {
     let trait_def = syn::parse::<ItemTrait>(input)?;
     let version = if attr.is_empty() {
