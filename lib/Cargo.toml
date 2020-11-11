@@ -14,7 +14,7 @@ description = "An async, macro-driven JSON-RPC client with pluggable backends."
 [dependencies]
 async-trait = "0.1"
 isahc = { version = "0.9", optional = true, features = [ "json" ] }
-jsonrpc_client_macro = { path = "../macro" }
+jsonrpc_client_macro = { path = "../macro", optional = true }
 reqwest = { version = "0.10", features = [ "json" ], optional = true }
 serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
@@ -31,20 +31,24 @@ trybuild = "1.0"
 
 [[example]]
 name = "reqwest"
-required-features = [ "reqwest" ]
+required-features = [ "reqwest", "macros" ]
 
 [[example]]
 name = "customize_path"
-required-features = [ "reqwest" ]
+required-features = [ "reqwest", "macros" ]
 
 [[example]]
 name = "bitcoind"
-required-features = [ "reqwest" ]
+required-features = [ "reqwest", "macros" ]
 
 [[example]]
 name = "surf"
-required-features = [ "surf" ]
+required-features = [ "surf", "macros" ]
 
 [[example]]
 name = "isahc"
-required-features = [ "isahc" ]
+required-features = [ "isahc", "macros" ]
+
+[features]
+default = [ "macros" ]
+macros = [ "jsonrpc_client_macro" ]

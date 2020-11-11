@@ -61,6 +61,7 @@ mod isahc;
 ///     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 /// }
 /// ```
+#[cfg(feature = "macros")]
 pub use jsonrpc_client_macro::api;
 
 /// Implement a given API trait on this client.
@@ -97,6 +98,7 @@ pub use jsonrpc_client_macro::api;
 /// #    }
 /// # }
 /// ```
+#[cfg(feature = "macros")]
 pub use jsonrpc_client_macro::implement;
 
 pub use url::Url;
