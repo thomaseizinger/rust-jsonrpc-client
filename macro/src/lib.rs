@@ -124,10 +124,11 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
     }).collect::<Result<Vec<_>, _>>()?;
 
     let trait_ident = trait_def.ident;
+    let vis = trait_def.vis;
 
     Ok(quote! {
         #[async_trait::async_trait]
-        trait #trait_ident<C> where C: ::jsonrpc_client::SendRequest {
+        #vis trait #trait_ident<C> where C: ::jsonrpc_client::SendRequest {
             #(#new_methods)*
 
             async fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <C as ::jsonrpc_client::SendRequest>::Error>;
