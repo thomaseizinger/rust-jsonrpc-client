@@ -46,7 +46,7 @@ mod reqwest;
 pub mod surf;
 
 #[cfg(feature = "isahc")]
-pub mod isahc;
+mod isahc;
 
 /// Define the API of the JSON-RPC server you want to talk to.
 ///
