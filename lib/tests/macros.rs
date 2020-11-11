@@ -1,9 +1,6 @@
 use jsonrpc_client::{Id, Response, SendRequest, Url};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::cell::Cell;
-use std::fmt;
-use std::ops::Deref;
+use serde::{de::DeserializeOwned, Serialize};
+use std::{cell::Cell, fmt, ops::Deref};
 
 #[jsonrpc_client::api(version = "1.0")]
 pub trait MathV1 {

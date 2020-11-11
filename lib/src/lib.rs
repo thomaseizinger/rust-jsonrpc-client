@@ -102,8 +102,10 @@ pub use jsonrpc_client_macro::implement;
 pub use url::Url;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::error::Error as StdError;
-use std::fmt::{self, Debug};
+use std::{
+    error::Error as StdError,
+    fmt::{self, Debug},
+};
 
 /// The ID of a JSON-RPC request.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

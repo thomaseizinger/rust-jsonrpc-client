@@ -1,6 +1,5 @@
 use proc_macro::TokenStream;
-use quote::quote;
-use quote::quote_spanned;
+use quote::{quote, quote_spanned};
 use syn::{
     spanned::Spanned, Error, Field, Fields, FnArg, ItemStruct, ItemTrait, Lit, Meta, MetaNameValue,
     NestedMeta, Pat, Path, ReturnType, TraitItem, TraitItemMethod,

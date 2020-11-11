@@ -1,7 +1,6 @@
 use anyhow::{Context, Result};
 use bitcoincore_rpc_json::GetBlockchainInfoResult;
-use testcontainers::images::coblox_bitcoincore::BitcoinCore;
-use testcontainers::*;
+use testcontainers::{images::coblox_bitcoincore::BitcoinCore, *};
 
 #[jsonrpc_client::api(version = "1.0")]
 pub trait BitcoindRpc {

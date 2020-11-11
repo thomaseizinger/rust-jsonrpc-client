@@ -1,7 +1,11 @@
 use crate::{Response, SendRequest, Url};
-use isahc::http::header::{HeaderValue, CONTENT_TYPE};
-use isahc::http::Request;
-use isahc::ResponseExt;
+use isahc::{
+    http::{
+        header::{HeaderValue, CONTENT_TYPE},
+        Request,
+    },
+    ResponseExt,
+};
 use serde::de::DeserializeOwned;
 
 #[async_trait::async_trait]

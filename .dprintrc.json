@@ -5,6 +5,7 @@
   "markdown": {
   },
   "rustfmt": {
+    "merge_imports": true
   },
   "includes": ["**/*.{md,rs,toml}"],
   "excludes": [

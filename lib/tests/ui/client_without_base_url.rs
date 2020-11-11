@@ -1,6 +1,4 @@
-use jsonrpc_client::Response;
-use jsonrpc_client::SendRequest;
-use jsonrpc_client::Url;
+use jsonrpc_client::{Response, SendRequest, Url};
 use serde::de::DeserializeOwned;
 
 #[jsonrpc_client::api]
