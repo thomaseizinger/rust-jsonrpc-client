@@ -1,13 +1,104 @@
+//! A macro-driven JSON-RPC client.
+//!
+//! This crate offers a macro-driven approach to interacting with JSON-RPC APIs.
+//! JSON-RPC itself is pretty lightweight, yet it is pretty verbose if you have to roll a client from scratch on top of say `reqwest`.
+//!
+//! This crate abstracts away this boilerplate by allowing you to define a trait that resembles the API you want to talk to.
+//! At the same time, we give full control the user over which HTTP client they want to use to actually send the request.
+//!
+//! # Example
+//!
+//! ```rust,no_run
+//! # use anyhow::Result;
+//! #[jsonrpc_client::api]
+//! pub trait Math {
+//!     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+//! }
+//!
+//! #[jsonrpc_client::implement(Math)]
+//! struct Client {
+//!     inner: reqwest::Client,
+//!     base_url: reqwest::Url,
+//! }
+//! # impl Client {
+//! #     fn new(base_url: String) -> Result<Self> {
+//! #        Ok(Self {
+//! #            inner: reqwest::Client::new(),
+//! #            base_url: base_url.parse()?,
+//! #        })
+//! #    }
+//! # }
+//! # #[tokio::main]
+//! # async fn main() -> Result<()> {
+//!
+//! let client = Client::new("http://example-jsonrpc.org/".to_owned())?;
+//!
+//! client.subtract(10, 5).await?;
+//! #
+//! #    Ok(())
+//! # }
+//! ```
+
 #[cfg(feature = "reqwest")]
 mod reqwest;
 
-pub use jsonrpc_client_macro::{api, implement};
+/// Define the API of the JSON-RPC server you want to talk to.
+///
+/// All methods of this trait must be `async`. Additionally, the trait cannot have other items such as `const` or `type` declarations.
+/// You can define the JSON-RPC version through the `version` attribute. For now, all this does is sent the correct version property in the JSON-RPC request.
+///
+/// # Example
+///
+/// ```
+/// #[jsonrpc_client::api]
+/// pub trait Math {
+///     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+/// }
+/// ```
+pub use jsonrpc_client_macro::api;
+
+/// Implement a given API trait on this client.
+///
+/// The client needs to have at least two fields:
+///
+/// - the "inner" client that is used to dispatch the request
+/// - the "base_url" of the server the request should be sent to
+///
+/// If these fields are literally named `inner` and `base_url`, then they will be automatically detected by this macro.
+/// If you wish to use alternative names, you can use the attributes `#[jsonrpc_client(inner)]` and `#[jsonrpc_client(base_url)]` to mark them accordingly.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// # use anyhow::Result;
+/// # #[jsonrpc_client::api]
+/// # pub trait Math {
+/// #    async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+/// # }
+/// #[jsonrpc_client::implement(Math)]
+/// struct Client {
+///     #[jsonrpc_client(inner)]
+///     my_client: reqwest::Client,
+///     #[jsonrpc_client(base_url)]
+///     url: reqwest::Url,
+/// }
+/// # impl Client {
+/// #     fn new(base_url: String) -> Result<Self> {
+/// #        Ok(Self {
+/// #            my_client: reqwest::Client::new(),
+/// #            url: base_url.parse()?,
+/// #        })
+/// #    }
+/// # }
+/// ```
+pub use jsonrpc_client_macro::implement;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::error::Error as StdError;
 use std::fmt::{self, Debug};
 use url::Url;
 
+/// The ID of a JSON-RPC request.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]
 pub enum Id {
@@ -15,6 +106,7 @@ pub enum Id {
     String(String),
 }
 
+/// The JSON-RPC version.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum Version {
     #[serde(rename = "1.0")]
@@ -23,6 +115,9 @@ pub enum Version {
     V2,
 }
 
+/// A JSON-RPC request.
+///
+/// Normally, you shouldn't need to interact with this directly. It is used to correctly serialize the request being sent.
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct Request {
     pub id: Id,
@@ -51,6 +146,9 @@ impl Request {
     }
 }
 
+/// A JSON-RPC response.
+///
+/// Normally, you shouldn't need to interact with this directly. It is used to correctly deserialize the response from the server.
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Response<P> {
     pub id: Id,
@@ -104,6 +202,7 @@ impl<P> Response<P> {
     }
 }
 
+#[doc(hidden)]
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub struct ResponsePayload<P> {
@@ -140,6 +239,7 @@ impl<P> From<ResponsePayload<P>> for Result<P, JsonRpcError> {
     }
 }
 
+/// A JSON-RPC error.
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct JsonRpcError {
     pub code: i64,
@@ -203,6 +303,42 @@ where
     }
 }
 
+/// A trait abstracting over how a request is actually sent to a server.
+///
+/// This trait needs to be implemented on the "inner" client.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// # use url::Url;
+/// # use serde::de::DeserializeOwned;
+/// # use jsonrpc_client::{Response, SendRequest};
+/// struct MyHttpClient;
+///
+/// #[async_trait::async_trait]
+/// impl SendRequest for MyHttpClient {
+/// #     type Error = reqwest::Error;
+///
+///     async fn send_request<P>(&self, endpoint: Url, body: String) -> Result<Response<P>, Self::Error>
+///     where
+///         P: DeserializeOwned,
+///     {
+///         // send the given body to the given endpoint and deserialize the response as `Response<P>`
+/// #        unimplemented!()
+///     }
+/// }
+///
+/// #[jsonrpc_client::api]
+/// pub trait Math {
+///     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
+/// }
+///
+/// #[jsonrpc_client::implement(Math)]
+/// struct Client {
+///     inner: MyHttpClient,
+///     base_url: Url,
+/// }
+/// ```
 #[async_trait::async_trait]
 pub trait SendRequest: 'static {
     type Error: StdError;

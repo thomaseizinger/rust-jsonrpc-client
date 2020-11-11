@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
-    spanned::Spanned, Error, Field, FnArg, ItemStruct, ItemTrait, Lit, Meta, MetaNameValue,
+    spanned::Spanned, Error, Field, Fields, FnArg, ItemStruct, ItemTrait, Lit, Meta, MetaNameValue,
     NestedMeta, Pat, Path, ReturnType, TraitItem, TraitItemMethod,
 };
 
@@ -136,7 +136,7 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 }
 
 fn make_api_impl(item: TokenStream, attr: TokenStream) -> Result<TokenStream, Error> {
-    let struct_def = syn::parse::<ItemStruct>(item)?;
+    let mut struct_def = syn::parse::<ItemStruct>(item)?;
     let traits_to_impl = syn::parse::<Path>(attr)?;
 
     let name = &struct_def.ident;
@@ -227,15 +227,31 @@ fn make_api_impl(item: TokenStream, attr: TokenStream) -> Result<TokenStream, Er
         }
     };
 
-    Ok(quote! {
-        #struct_def
-
+    let trait_impl = quote! {
         #[async_trait::async_trait]
         impl #traits_to_impl<#client_ty> for #name {
             async fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <#client_ty as ::jsonrpc_client::SendRequest>::Error> {
                 ::jsonrpc_client::SendRequest::send_request(&#client_access, #base_url_access.clone(), request).await
             }
         }
+    };
+
+    // remove all `jsonrpc_client` attributes from the struct definition
+    let fields = match &mut struct_def.fields {
+        Fields::Named(named_fields) => named_fields.named.iter_mut(),
+        Fields::Unnamed(unnamed_fields) => unnamed_fields.unnamed.iter_mut(),
+        Fields::Unit => unreachable!("struct must not be a unit struct"),
+    };
+    for field in fields {
+        field
+            .attrs
+            .retain(|attr| !attr.path.is_ident("jsonrpc_client"));
     }
-        .into())
+
+    Ok(quote! {
+        #struct_def
+
+        #trait_impl
+    }
+    .into())
 }
