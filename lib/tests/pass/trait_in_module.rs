@@ -14,7 +14,7 @@ struct InnerClient;
 impl SendRequest for InnerClient {
     type Error = std::io::Error;
 
-    async fn send_request<P>(&self, endpoint: Url, body: String) -> Result<Response<P>, Self::Error>
+    async fn send_request<P>(&self, _: Url, _: String) -> Result<Response<P>, Self::Error>
     where
         P: DeserializeOwned,
     {

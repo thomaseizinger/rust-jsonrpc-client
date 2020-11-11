@@ -38,6 +38,22 @@
 //! #    Ok(())
 //! # }
 //! ```
+//!
+//! # Backends
+//!
+//! This crate supports several backends out of the box.
+//! Concretely:
+//!
+//! - reqwest
+//! - surf
+//! - isahc
+//!
+//! To use any (or all) of these backends, simply activate the corresponding feature-flag:
+//!
+//! ```toml
+//! [dependencies]
+//! jsonrpc_client = { version = "*", features = ["reqwest", "surf", "isahc"] }
+//! ```
 
 #[cfg(feature = "reqwest")]
 mod reqwest;

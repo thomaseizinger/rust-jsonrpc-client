@@ -40,3 +40,19 @@ This allows us to take away all the boilerplate of making JSON-RPC calls and you
    ```
 
 4. Start using your client!
+
+## Backends
+
+Currently, the client supports several backends, all of them can be activated via a separate feature-flag:
+
+- reqwest
+- surf
+- isahc
+
+Support for more backends is welcomed.
+
+Unfortunately, not all can be supported.
+In particular:
+
+- hreq: Cannot be supported because their `Agent` takes `&mut self` for sending a request which doesn't work with the `SendRequest` trait.
+- awc: Cannot be supported because their `Client` does not implement `Send`.
