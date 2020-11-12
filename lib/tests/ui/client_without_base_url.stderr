@@ -1,8 +1,8 @@
 error: struct needs to have either a field named `base_url` or one tagged with `#[jsonrpc_client(base_url)]`
-  --> $DIR/client_without_base_url.rs:24:19
+  --> $DIR/client_without_base_url.rs:42:19
    |
-24 |   pub struct Client {
+42 |   pub struct Client {
    |  ___________________^
-25 | |     inner: InnerClient,
-26 | | }
+43 | |     inner: InnerClient,
+44 | | }
    | |_^

@@ -155,34 +155,33 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new_v1(method: &str, params: Vec<serde_json::Value>) -> Self {
+    pub fn new_v1(method: &str) -> Self {
         Self {
             id: Id::Number(0),
             jsonrpc: Version::V1,
             method: method.to_owned(),
-            params,
+            params: vec![],
         }
     }
 
-    pub fn new_v2(method: &str, params: Vec<serde_json::Value>) -> Self {
+    pub fn new_v2(method: &str) -> Self {
         Self {
             id: Id::Number(0),
             jsonrpc: Version::V2,
             method: method.to_owned(),
-            params,
+            params: vec![],
         }
+    }
+
+    pub fn with_argument<T: Serialize>(mut self, argument: T) -> Result<Self, serde_json::Error> {
+        self.params.push(serde_json::to_value(argument)?);
+
+        Ok(self)
     }
 
     pub fn serialize(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(&self)
     }
-}
-
-pub fn serialize_argument<T>(value: T) -> Result<serde_json::Value, serde_json::Error>
-where
-    T: Serialize,
-{
-    serde_json::to_value(value)
 }
 
 /// A JSON-RPC response.
@@ -378,7 +377,10 @@ where
 /// }
 /// ```
 #[async_trait::async_trait]
-pub trait SendRequest: 'static {
+pub trait SendRequest: 'static
+where
+    Error<Self::Error>: From<Self::Error>,
+{
     type Error: StdError;
 
     async fn send_request<P>(
@@ -393,7 +395,6 @@ pub trait SendRequest: 'static {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     #[test]
     fn deserialize_v1_error_response_error_first_result_second() {
@@ -493,7 +494,11 @@ mod tests {
 
     #[test]
     fn serialize_request() {
-        let request = Request::new_v2("subtract", vec![json!(42), json!(23)]);
+        let request = Request::new_v2("subtract")
+            .with_argument(42)
+            .unwrap()
+            .with_argument(23)
+            .unwrap();
 
         let json = serde_json::to_string(&request).unwrap();
 

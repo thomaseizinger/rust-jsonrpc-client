@@ -1,25 +1,11 @@
 error[E0277]: the trait bound `Number: serde::Serialize` is not satisfied
-   --> $DIR/non_serializable_arguments.rs:5:30
-    |
-5   |     async fn subtract(&self, subtrahend: Number, minuend: Number) -> u64;
-    |                              ^^^^^^^^^^^^^^^^^^ the trait `serde::Serialize` is not implemented for `Number`
-    |
-   ::: /home/thomas/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_json-1.0.59/src/value/mod.rs:962:8
-    |
-962 |     T: Serialize,
-    |        --------- required by this bound in `serde_json::to_value`
-    |
-    = note: required because of the requirements on the impl of `serde::Serialize` for `&Number`
+ --> $DIR/non_serializable_arguments.rs:5:30
+  |
+5 |     async fn subtract(&self, subtrahend: Number, minuend: Number) -> u64;
+  |                              ^^^^^^^^^^ the trait `serde::Serialize` is not implemented for `Number`
 
 error[E0277]: the trait bound `Number: serde::Serialize` is not satisfied
-   --> $DIR/non_serializable_arguments.rs:5:50
-    |
-5   |     async fn subtract(&self, subtrahend: Number, minuend: Number) -> u64;
-    |                                                  ^^^^^^^^^^^^^^^ the trait `serde::Serialize` is not implemented for `Number`
-    |
-   ::: /home/thomas/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_json-1.0.59/src/value/mod.rs:962:8
-    |
-962 |     T: Serialize,
-    |        --------- required by this bound in `serde_json::to_value`
-    |
-    = note: required because of the requirements on the impl of `serde::Serialize` for `&Number`
+ --> $DIR/non_serializable_arguments.rs:5:50
+  |
+5 |     async fn subtract(&self, subtrahend: Number, minuend: Number) -> u64;
+  |                                                  ^^^^^^^ the trait `serde::Serialize` is not implemented for `Number`

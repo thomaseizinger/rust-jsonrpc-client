@@ -1,4 +1,4 @@
-use jsonrpc_client::{Id, Response, SendRequest, Url};
+use jsonrpc_client::{Error, Id, Response, SendRequest, Url};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{cell::Cell, fmt, ops::Deref};
 
@@ -67,6 +67,12 @@ impl SendRequest for InnerClient {
     }
 }
 
+impl From<DummyError> for Error<DummyError> {
+    fn from(inner: DummyError) -> Self {
+        Error::Client(inner)
+    }
+}
+
 pub struct ExampleDotOrg(Url);
 
 impl Default for ExampleDotOrg {
@@ -83,9 +89,21 @@ impl Deref for ExampleDotOrg {
     }
 }
 
-fn assert_impls_math_v1<C: SendRequest, T: MathV1<C>>(_: T) {}
-fn assert_impls_math_v2<C: SendRequest, T: MathV2<C>>(_: T) {}
-fn assert_impls_math_v2_default<C: SendRequest, T: MathV2Default<C>>(_: T) {}
+fn assert_impls_math_v1<C: SendRequest, T: MathV1<C>>(_: T)
+where
+    Error<<C as SendRequest>::Error>: From<<C as SendRequest>::Error>,
+{
+}
+fn assert_impls_math_v2<C: SendRequest, T: MathV2<C>>(_: T)
+where
+    Error<<C as SendRequest>::Error>: From<<C as SendRequest>::Error>,
+{
+}
+fn assert_impls_math_v2_default<C: SendRequest, T: MathV2Default<C>>(_: T)
+where
+    Error<<C as SendRequest>::Error>: From<<C as SendRequest>::Error>,
+{
+}
 
 mod derive_on_named_inner {
     use crate::{ExampleDotOrg, InnerClient};

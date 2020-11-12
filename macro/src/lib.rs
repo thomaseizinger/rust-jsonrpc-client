@@ -98,7 +98,7 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 
         let serialized_arguments = arguments
             .iter()
-            .map(|(argument, ty)| quote_spanned! { ty.span() => ::serde_json::to_value(&#argument)? })
+            .map(|(argument, ty)| quote_spanned! { ty.span() => .with_argument(#argument)? })
             .collect::<Vec<_>>();
 
         let new_request_fn = match version {
@@ -110,21 +110,21 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 
         let send_request_call = match &method.sig.output {
             ReturnType::Default => quote! {
-               self.send_request::<#return_type>(request).await.map_err(::jsonrpc_client::Error::Client)?;
+               self.send_request::<#return_type>(request).await?;
             },
             ReturnType::Type(_, return_type) => quote_spanned! { return_type.span() =>
-                self.send_request::<#return_type>(request).await.map_err(::jsonrpc_client::Error::Client)?;
+                self.send_request::<#return_type>(request).await?;
             },
         };
 
         Ok(quote! {
             async fn #method_ident(#inputs) -> Result<#return_type, ::jsonrpc_client::Error<<C as ::jsonrpc_client::SendRequest>::Error>> {
-                let parameters = vec![ #(#serialized_arguments),* ];
-                let request = ::jsonrpc_client::Request::#new_request_fn(stringify!(#method_ident), parameters);
-                let request = ::serde_json::to_string(&request)?;
+                let request = ::jsonrpc_client::Request::#new_request_fn(stringify!(#method_ident))
+                    #(#serialized_arguments)*
+                    .serialize()?;
 
                 let response = #send_request_call
-                let success = Result::from(response.payload).map_err(::jsonrpc_client::Error::JsonRpc)?;
+                let success = Result::from(response.payload)?;
 
                 Ok(success)
             }
@@ -136,7 +136,7 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 
     Ok(quote! {
         #[async_trait::async_trait]
-        #vis trait #trait_ident<C> where C: ::jsonrpc_client::SendRequest {
+        #vis trait #trait_ident<C> where C: ::jsonrpc_client::SendRequest, ::jsonrpc_client::Error<<C as jsonrpc_client::SendRequest>::Error>: From<<C as jsonrpc_client::SendRequest>::Error> {
             #(#new_methods)*
 
             async fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <C as ::jsonrpc_client::SendRequest>::Error>;
