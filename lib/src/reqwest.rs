@@ -20,3 +20,9 @@ impl SendRequest for reqwest::Client {
             .await?)
     }
 }
+
+impl From<reqwest::Error> for crate::Error<reqwest::Error> {
+    fn from(inner: reqwest::Error) -> Self {
+        crate::Error::Client(inner)
+    }
+}

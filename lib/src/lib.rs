@@ -123,6 +123,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     error::Error as StdError,
     fmt::{self, Debug},
+    result::Result,
 };
 
 /// The ID of a JSON-RPC request.
@@ -171,6 +172,17 @@ impl Request {
             params,
         }
     }
+
+    pub fn serialize(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(&self)
+    }
+}
+
+pub fn serialize_argument<T>(value: T) -> Result<serde_json::Value, serde_json::Error>
+where
+    T: Serialize,
+{
+    serde_json::to_value(value)
 }
 
 /// A JSON-RPC response.
