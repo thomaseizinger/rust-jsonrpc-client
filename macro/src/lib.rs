@@ -116,8 +116,10 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
                 self.send_request::<#return_type>(request).await?;
             },
         };
+        let attrs = &method.attrs;
 
         Ok(quote! {
+            #(#attrs)*
             async fn #method_ident(#inputs) -> Result<#return_type, ::jsonrpc_client::Error<<C as ::jsonrpc_client::SendRequest>::Error>> {
                 let request = ::jsonrpc_client::Request::#new_request_fn(stringify!(#method_ident))
                     #(#serialized_arguments)*
