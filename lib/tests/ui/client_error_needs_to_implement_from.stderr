@@ -1,19 +1,19 @@
-error[E0277]: the trait bound `jsonrpc_client::Error<DummyError>: std::convert::From<DummyError>` is not satisfied
+error[E0277]: the trait bound `jsonrpc_client::Error<DummyError>: From<DummyError>` is not satisfied
    --> $DIR/client_error_needs_to_implement_from.rs:24:6
     |
 24  | impl SendRequest for InnerClient {
-    |      ^^^^^^^^^^^ the trait `std::convert::From<DummyError>` is not implemented for `jsonrpc_client::Error<DummyError>`
+    |      ^^^^^^^^^^^ the trait `From<DummyError>` is not implemented for `jsonrpc_client::Error<DummyError>`
     |
    ::: $WORKSPACE/lib/src/lib.rs
     |
     |     Error<Self::Error>: From<Self::Error>,
-    |                         ----------------- required by this bound in `jsonrpc_client::SendRequest`
+    |                         ----------------- required by this bound in `SendRequest`
     |
     = help: the following implementations were found:
-              <jsonrpc_client::Error<C> as std::convert::From<jsonrpc_client::JsonRpcError>>
-              <jsonrpc_client::Error<C> as std::convert::From<serde_json::error::Error>>
+              <jsonrpc_client::Error<C> as From<JsonRpcError>>
+              <jsonrpc_client::Error<C> as From<serde_json::error::Error>>
 
-error[E0277]: the trait bound `jsonrpc_client::Error<DummyError>: std::convert::From<DummyError>` is not satisfied
+error[E0277]: the trait bound `jsonrpc_client::Error<DummyError>: From<DummyError>` is not satisfied
   --> $DIR/client_error_needs_to_implement_from.rs:35:1
    |
 5  | #[jsonrpc_client::api]
@@ -22,9 +22,9 @@ error[E0277]: the trait bound `jsonrpc_client::Error<DummyError>: std::convert::
    |           ---- required by a bound in this
 ...
 35 | #[jsonrpc_client::implement(Math)]
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::convert::From<DummyError>` is not implemented for `jsonrpc_client::Error<DummyError>`
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<DummyError>` is not implemented for `jsonrpc_client::Error<DummyError>`
    |
    = help: the following implementations were found:
-             <jsonrpc_client::Error<C> as std::convert::From<jsonrpc_client::JsonRpcError>>
-             <jsonrpc_client::Error<C> as std::convert::From<serde_json::error::Error>>
+             <jsonrpc_client::Error<C> as From<JsonRpcError>>
+             <jsonrpc_client::Error<C> as From<serde_json::error::Error>>
    = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)

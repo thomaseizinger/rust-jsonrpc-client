@@ -1,11 +1,11 @@
-error[E0277]: the trait bound `Number: serde::Serialize` is not satisfied
+error[E0277]: the trait bound `Number: Serialize` is not satisfied
  --> $DIR/non_serializable_arguments.rs:5:30
   |
 5 |     async fn subtract(&self, subtrahend: Number, minuend: Number) -> u64;
-  |                              ^^^^^^^^^^ the trait `serde::Serialize` is not implemented for `Number`
+  |                              ^^^^^^^^^^ the trait `Serialize` is not implemented for `Number`
 
-error[E0277]: the trait bound `Number: serde::Serialize` is not satisfied
+error[E0277]: the trait bound `Number: Serialize` is not satisfied
  --> $DIR/non_serializable_arguments.rs:5:50
   |
 5 |     async fn subtract(&self, subtrahend: Number, minuend: Number) -> u64;
-  |                                                  ^^^^^^^ the trait `serde::Serialize` is not implemented for `Number`
+  |                                                  ^^^^^^^ the trait `Serialize` is not implemented for `Number`
