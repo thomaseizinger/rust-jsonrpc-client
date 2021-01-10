@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  style:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install dprint
+        run: |
+          curl -fsSL https://dprint.dev/install.sh | sh
+          echo "/home/runner/.dprint/bin" >> $GITHUB_PATH
+
+      - name: Check formatting
+        run: dprint check
+
+  lint:
+    name: Lint codebase using clippy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: clippy
+
+      - name: Check no warnings
+        uses: actions-rs/clippy@master
+        with:
+          args: --all-features --all-targets -- -D warn
+
+  tests:
+    name: Run tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        args: ['--all-features', '--manifest-path=lib/Cargo.toml --no-default-features', '--manifest-path=macro/Cargo.toml --no-default-features']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install rust
+        id: toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Cache target directory
+        uses: actions/cache@v2
+        with:
+          path: target
+          # The target directory is only useful with the same Rust version, dependencies, operating system and compilation arguments.
+          key: ${{ matrix.os }}-target-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('Cargo.lock') }}-${{ matrix.args }}
+
+      - name: Run all tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: ${{ matrix.args }}
+
+  docs:
+    name: Build docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Build docs
+        uses: actions-rs/cargo@v1
+        with:
+          command: rustdoc
+          args: --manifest-path=lib/Cargo.toml -- -D broken_intra_doc_links
