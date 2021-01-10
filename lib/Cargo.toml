@@ -6,7 +6,7 @@ categories = [ "web-programming::http-client", "api-bindings", "network-programm
 edition = "2018"
 keywords = [ "jsonrpc", "macro", "http", "client" ]
 license = "MIT OR Apache-2.0"
-readme = "README.md"
+readme = "../README.md"
 repository = "https://github.com/thomaseizinger/rust-jsonrpc-client"
 description = "An async, macro-driven JSON-RPC client with pluggable backends."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
