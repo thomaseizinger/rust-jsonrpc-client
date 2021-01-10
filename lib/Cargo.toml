@@ -34,6 +34,10 @@ name = "reqwest"
 required-features = [ "reqwest", "macros" ]
 
 [[example]]
+name = "custom_method"
+required-features = [ "reqwest", "macros" ]
+
+[[example]]
 name = "customize_path"
 required-features = [ "reqwest", "macros" ]
 
