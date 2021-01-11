@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Re-export `async_trait` and `serde` dependencies from `jsonrpc_client` (https://github.com/thomaseizinger/rust-jsonrpc-client/issues/6).
+  This allows usage of the macros without having to add these dependencies to your own `Cargo.toml`.
+
 ## [0.3.0] - 2021-01-11
 
 This version is a complete re-write of the original `jsonrpc_client` crate.
