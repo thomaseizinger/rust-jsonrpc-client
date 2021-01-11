@@ -10,19 +10,19 @@
 //!
 //! ```rust,no_run
 //! # use anyhow::Result;
-//! #[cfg(feature = "macros")]
+//! #[cfg(all(feature = "macros", feature = "reqwest"))]
 //! #[jsonrpc_client::api]
 //! pub trait Math {
 //!     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 //! }
 //!
-//! #[cfg(feature = "macros")]
+//! #[cfg(all(feature = "macros", feature = "reqwest"))]
 //! #[jsonrpc_client::implement(Math)]
 //! struct Client {
 //!     inner: reqwest::Client,
 //!     base_url: reqwest::Url,
 //! }
-//! #[cfg(feature = "macros")]
+//! #[cfg(all(feature = "macros", feature = "reqwest"))]
 //! # impl Client {
 //! #     fn new(base_url: String) -> Result<Self> {
 //! #        Ok(Self {
@@ -31,7 +31,7 @@
 //! #        })
 //! #    }
 //! # }
-//! #[cfg(feature = "macros")]
+//! #[cfg(all(feature = "macros", feature = "reqwest"))]
 //! # #[tokio::main]
 //! # async fn main() -> Result<()> {
 //!
@@ -41,7 +41,7 @@
 //! #
 //! #    Ok(())
 //! # }
-//! # #[cfg(not(feature = "macros"))]
+//! # #[cfg(not(all(feature = "macros", feature = "reqwest")))]
 //! # fn main() {}
 //! ```
 //!
@@ -100,12 +100,13 @@ pub use jsonrpc_client_macro::api;
 /// # Example
 ///
 /// ```rust,no_run
-/// # #![cfg(all(feature = "macros", feature = "reqwest"))]
 /// # use anyhow::Result;
+/// # #[cfg(all(feature = "macros", feature = "reqwest"))]
 /// # #[jsonrpc_client::api]
 /// # pub trait Math {
 /// #    async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 /// # }
+/// # #[cfg(all(feature = "macros", feature = "reqwest"))]
 /// #[jsonrpc_client::implement(Math)]
 /// struct Client {
 ///     #[jsonrpc_client(inner)]
@@ -113,6 +114,7 @@ pub use jsonrpc_client_macro::api;
 ///     #[jsonrpc_client(base_url)]
 ///     url: reqwest::Url,
 /// }
+/// # #[cfg(all(feature = "macros", feature = "reqwest"))]
 /// # impl Client {
 /// #     fn new(base_url: String) -> Result<Self> {
 /// #        Ok(Self {
@@ -358,12 +360,28 @@ where
 /// ```rust,no_run
 /// # use serde::de::DeserializeOwned;
 /// # use jsonrpc_client::{Response, SendRequest, Url};
+/// use bitcoincore_rpc_json::bitcoin::hashes::core::fmt::Formatter;
 /// struct MyHttpClient;
+///
+/// # #[derive(Debug)]
+/// struct MyError;
+///
+/// # impl std::fmt::Display for MyError {
+/// #     fn fmt(&self,f: &mut Formatter<'_>) -> std::fmt::Result {
+/// #         unimplemented!()
+/// #     }
+/// # }
+/// # impl std::error::Error for MyError { }
+/// # impl From<MyError> for jsonrpc_client::Error<MyError> {
+/// #    fn from(e: MyError) -> Self {
+/// #        unimplemented!()
+/// #    }
+/// # }
 ///
 /// # #[cfg(feature = "macros")]
 /// #[async_trait::async_trait]
 /// impl SendRequest for MyHttpClient {
-/// #     type Error = reqwest::Error;
+///     type Error = MyError;
 ///
 ///     async fn send_request<P>(&self, endpoint: Url, body: String) -> Result<Response<P>, Self::Error>
 ///     where
