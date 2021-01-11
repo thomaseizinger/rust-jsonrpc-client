@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2021-01-11
+
+## Changed
+
+- Bump version of `reqwest` to 0.11 and thereby change the transitive dependency of `tokio` to 1.0.
+
 ## [0.4.0] - 2021-01-11
 
 ### Added
@@ -19,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This version is a complete re-write of the original `jsonrpc_client` crate.
 It features a proc-macro based approach for declaring JSON-RPC APIs which you can then interact with using a number of different backends.
 
-[Unreleased]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/0.4.0...HEAD
+[Unreleased]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/0.5.0...HEAD
+[0.4.0]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/32da264b1fdccf4302dc889ca8b2a407fe5b294f...0.3.0

@@ -1,6 +1,6 @@
 [package]
 name = "jsonrpc_client"
-version = "0.4.0"
+version = "0.5.0"
 authors = [ "Thomas Eizinger <thomas@eizinger.io>" ]
 categories = [ "web-programming::http-client", "api-bindings", "network-programming" ]
 edition = "2018"
@@ -15,7 +15,7 @@ description = "An async, macro-driven JSON-RPC client with pluggable backends."
 async-trait = "0.1"
 isahc = { version = "0.9", optional = true, features = [ "json" ] }
 jsonrpc_client_macro = { version = "0.2", path = "../macro", optional = true }
-reqwest = { version = "0.10", features = [ "json" ], optional = true }
+reqwest = { version = "0.11", features = [ "json" ], optional = true }
 serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
 surf = { version = "2", optional = true }
@@ -24,10 +24,10 @@ url = "2"
 [dev-dependencies]
 anyhow = "1"
 bitcoincore-rpc-json = "0.12"
-reqwest = "0.10"
+reqwest = "0.11"
 testcontainers = "0.11"
-tokio = { version = "0.3", features = [ "macros", "rt-multi-thread" ] }
-trybuild = "1.0"
+tokio = { version = "1", features = [ "macros", "rt-multi-thread" ] }
+trybuild = "1"
 
 [[example]]
 name = "reqwest"
