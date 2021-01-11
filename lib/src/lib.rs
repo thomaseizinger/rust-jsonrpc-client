@@ -10,16 +10,19 @@
 //!
 //! ```rust,no_run
 //! # use anyhow::Result;
+//! #[cfg(feature = "macros")]
 //! #[jsonrpc_client::api]
 //! pub trait Math {
 //!     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 //! }
 //!
+//! #[cfg(feature = "macros")]
 //! #[jsonrpc_client::implement(Math)]
 //! struct Client {
 //!     inner: reqwest::Client,
 //!     base_url: reqwest::Url,
 //! }
+//! #[cfg(feature = "macros")]
 //! # impl Client {
 //! #     fn new(base_url: String) -> Result<Self> {
 //! #        Ok(Self {
@@ -28,6 +31,7 @@
 //! #        })
 //! #    }
 //! # }
+//! #[cfg(feature = "macros")]
 //! # #[tokio::main]
 //! # async fn main() -> Result<()> {
 //!
@@ -37,6 +41,8 @@
 //! #
 //! #    Ok(())
 //! # }
+//! # #[cfg(not(feature = "macros"))]
+//! # fn main() {}
 //! ```
 //!
 //! # Backends
@@ -72,6 +78,7 @@ mod isahc;
 /// # Example
 ///
 /// ```
+/// # #![cfg(feature = "macros")]
 /// #[jsonrpc_client::api]
 /// pub trait Math {
 ///     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
@@ -93,6 +100,7 @@ pub use jsonrpc_client_macro::api;
 /// # Example
 ///
 /// ```rust,no_run
+/// # #![cfg(all(feature = "macros", feature = "reqwest"))]
 /// # use anyhow::Result;
 /// # #[jsonrpc_client::api]
 /// # pub trait Math {
@@ -352,6 +360,7 @@ where
 /// # use jsonrpc_client::{Response, SendRequest, Url};
 /// struct MyHttpClient;
 ///
+/// # #[cfg(feature = "macros")]
 /// #[async_trait::async_trait]
 /// impl SendRequest for MyHttpClient {
 /// #     type Error = reqwest::Error;
@@ -365,11 +374,13 @@ where
 ///     }
 /// }
 ///
+/// # #[cfg(feature = "macros")]
 /// #[jsonrpc_client::api]
 /// pub trait Math {
 ///     async fn subtract(&self, subtrahend: i64, minuend: i64) -> i64;
 /// }
 ///
+/// # #[cfg(feature = "macros")]
 /// #[jsonrpc_client::implement(Math)]
 /// struct Client {
 ///     inner: MyHttpClient,

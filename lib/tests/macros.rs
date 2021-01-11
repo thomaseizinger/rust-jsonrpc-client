@@ -1,3 +1,5 @@
+#![cfg(feature = "macros")]
+
 use jsonrpc_client::{Error, Id, Response, SendRequest, Url};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{cell::Cell, fmt, ops::Deref};
