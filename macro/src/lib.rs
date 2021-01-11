@@ -137,11 +137,11 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
     let vis = trait_def.vis;
 
     Ok(quote! {
-        #[async_trait::async_trait]
+        #[::jsonrpc_client::export::async_trait::async_trait]
         #vis trait #trait_ident<C> where C: ::jsonrpc_client::SendRequest, ::jsonrpc_client::Error<<C as jsonrpc_client::SendRequest>::Error>: From<<C as jsonrpc_client::SendRequest>::Error> {
             #(#new_methods)*
 
-            async fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <C as ::jsonrpc_client::SendRequest>::Error>;
+            async fn send_request<P: ::jsonrpc_client::export::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <C as ::jsonrpc_client::SendRequest>::Error>;
         }
     }.into())
 }
@@ -239,9 +239,9 @@ fn make_api_impl(item: TokenStream, attr: TokenStream) -> Result<TokenStream, Er
     };
 
     let trait_impl = quote! {
-        #[async_trait::async_trait]
+        #[::jsonrpc_client::export::async_trait::async_trait]
         impl #traits_to_impl<#client_ty> for #name {
-            async fn send_request<P: ::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <#client_ty as ::jsonrpc_client::SendRequest>::Error> {
+            async fn send_request<P: ::jsonrpc_client::export::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <#client_ty as ::jsonrpc_client::SendRequest>::Error> {
                 ::jsonrpc_client::SendRequest::send_request(&#client_access, #base_url_access.clone(), request).await
             }
         }

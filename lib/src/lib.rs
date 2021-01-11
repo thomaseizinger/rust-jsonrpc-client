@@ -87,6 +87,10 @@ mod isahc;
 #[cfg(feature = "macros")]
 pub use jsonrpc_client_macro::api;
 
+pub mod export {
+    pub use async_trait;
+    pub use serde;
+}
 /// Implement a given API trait on this client.
 ///
 /// The client needs to have at least two fields:
