@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2021-02-22
+
+## Changed
+
+- Deactivate `default-features` of the `reqwest` dependency.
+
 ## [0.5.0] - 2021-01-11
 
 ## Changed
@@ -25,7 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This version is a complete re-write of the original `jsonrpc_client` crate.
 It features a proc-macro based approach for declaring JSON-RPC APIs which you can then interact with using a number of different backends.
 
-[Unreleased]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/32da264b1fdccf4302dc889ca8b2a407fe5b294f...v0.3.0

@@ -1,6 +1,6 @@
 [package]
 name = "jsonrpc_client"
-version = "0.5.0"
+version = "0.5.1"
 authors = [ "Thomas Eizinger <thomas@eizinger.io>" ]
 categories = [ "web-programming::http-client", "api-bindings", "network-programming" ]
 edition = "2018"
