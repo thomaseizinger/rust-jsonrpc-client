@@ -14,13 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install dprint
-        run: |
-          curl -fsSL https://dprint.dev/install.sh | sh
-          echo "/home/runner/.dprint/bin" >> $GITHUB_PATH
-
-      - name: Check formatting
-        run: dprint check
+      - uses: dprint/check@v1.2
 
   lint:
     name: Lint codebase using clippy
@@ -39,7 +33,7 @@ jobs:
       - name: Check no warnings
         uses: actions-rs/clippy@master
         with:
-          args: --all-features --all-targets -- -D warn
+          args: --all-features --all-targets -- -D warnings
 
   tests:
     name: Run tests
