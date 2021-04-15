@@ -170,7 +170,7 @@ async fn creates_correct_v2_request() {
     assert_eq!(result, 1);
     assert_eq!(
         client.inner.take_recorded_request(),
-        r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":[5,4]}"#
+        r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":{"minuend":4,"subtrahend":5}}"#
     );
 }
 
@@ -186,6 +186,6 @@ async fn creates_correct_v2_default_request() {
     assert_eq!(result, 1);
     assert_eq!(
         client.inner.take_recorded_request(),
-        r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":[5,4]}"#
+        r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":{"minuend":4,"subtrahend":5}}"#
     );
 }
