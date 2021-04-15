@@ -98,7 +98,7 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 
         let serialized_arguments = arguments
             .iter()
-            .map(|(argument, ty)| quote_spanned! { ty.span() => .with_argument(#argument)? })
+            .map(|(argument, ty)| quote_spanned! { ty.span() => .with_argument(String::from(stringify!(#argument)), #argument)? })
             .collect::<Vec<_>>();
 
         let new_request_fn = match version {

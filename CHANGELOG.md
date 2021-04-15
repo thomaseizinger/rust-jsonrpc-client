@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Changed
+
+- APIs defined with `version = 2.0` (as in `#[jsonrpc_client::api(version = "2.0")]`) will now serialize their arguments by name instead of by position.
+  The JSON-RPC spec is vague on whether every `2.0` server must accept parameters by name.
+  For now we assume that this is the case.
+  This restriction may be lifted in the future.
+
 ## [0.5.1] - 2021-02-22
 
 ## Changed

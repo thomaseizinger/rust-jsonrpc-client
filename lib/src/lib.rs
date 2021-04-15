@@ -165,7 +165,14 @@ pub struct Request {
     pub id: Id,
     pub jsonrpc: Version,
     pub method: String,
-    pub params: Vec<serde_json::Value>,
+    pub params: Params,
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq)]
+#[serde(untagged)]
+pub enum Params {
+    ByPosition(Vec<serde_json::Value>),
+    ByName(serde_json::Map<String, serde_json::Value>),
 }
 
 impl Request {
@@ -174,7 +181,7 @@ impl Request {
             id: Id::Number(0),
             jsonrpc: Version::V1,
             method: method.to_owned(),
-            params: vec![],
+            params: Params::ByPosition(vec![]),
         }
     }
 
@@ -183,12 +190,23 @@ impl Request {
             id: Id::Number(0),
             jsonrpc: Version::V2,
             method: method.to_owned(),
-            params: vec![],
+            params: Params::ByName(serde_json::Map::new()),
         }
     }
 
-    pub fn with_argument<T: Serialize>(mut self, argument: T) -> Result<Self, serde_json::Error> {
-        self.params.push(serde_json::to_value(argument)?);
+    pub fn with_argument<T: Serialize>(
+        mut self,
+        name: String,
+        argument: T,
+    ) -> Result<Self, serde_json::Error> {
+        let argument = serde_json::to_value(argument)?;
+
+        match &mut self.params {
+            Params::ByPosition(params) => params.push(argument),
+            Params::ByName(params) => {
+                params.insert(name, argument);
+            }
+        };
 
         Ok(self)
     }
@@ -526,18 +544,34 @@ mod tests {
     }
 
     #[test]
-    fn serialize_request() {
-        let request = Request::new_v2("subtract")
-            .with_argument(42)
+    fn serialize_request_v1() {
+        let request = Request::new_v1("subtract")
+            .with_argument("first".to_owned(), 42)
             .unwrap()
-            .with_argument(23)
+            .with_argument("second".to_owned(), 23)
             .unwrap();
 
         let json = serde_json::to_string(&request).unwrap();
 
         assert_eq!(
             json,
-            r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":[42,23]}"#
+            r#"{"id":0,"jsonrpc":"1.0","method":"subtract","params":[42,23]}"#
+        );
+    }
+
+    #[test]
+    fn serialize_request_v2() {
+        let request = Request::new_v2("subtract")
+            .with_argument("first".to_owned(), 42)
+            .unwrap()
+            .with_argument("second".to_owned(), 23)
+            .unwrap();
+
+        let json = serde_json::to_string(&request).unwrap();
+
+        assert_eq!(
+            json,
+            r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":{"first":42,"second":23}}"#
         );
     }
 }

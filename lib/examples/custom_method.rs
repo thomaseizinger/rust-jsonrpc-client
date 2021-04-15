@@ -26,8 +26,8 @@ impl Client {
         factor: i64,
     ) -> Result<i64, jsonrpc_client::Error<reqwest::Error>> {
         let body = jsonrpc_client::Request::new_v2("multiply")
-            .with_argument(value)?
-            .with_argument(factor)?
+            .with_argument(String::from("value"), value)?
+            .with_argument(String::from("factor"), factor)?
             .serialize()?;
 
         let payload = self
