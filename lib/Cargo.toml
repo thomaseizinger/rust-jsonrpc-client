@@ -20,6 +20,7 @@ serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
 surf = { version = "2", optional = true }
 url = "2"
+log = { version = "0.4", optional = true }
 
 [dev-dependencies]
 anyhow = "1"
@@ -56,3 +57,4 @@ required-features = [ "isahc", "macros" ]
 [features]
 default = [ "macros" ]
 macros = [ "jsonrpc_client_macro" ]
+all-backends = [ "reqwest", "isahc", "surf" ]

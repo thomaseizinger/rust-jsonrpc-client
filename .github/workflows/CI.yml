@@ -40,7 +40,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        args: ['--all-features', '--manifest-path=lib/Cargo.toml --no-default-features', '--manifest-path=macro/Cargo.toml --no-default-features', '']
+        args: [
+            '',
+            '--all-features',
+            '--manifest-path=lib/Cargo.toml --no-default-features',
+            '--manifest-path=macro/Cargo.toml --no-default-features',
+            '--manifest-path=lib/Cargo.toml --features=all-backends' # test all backends without logging
+        ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
