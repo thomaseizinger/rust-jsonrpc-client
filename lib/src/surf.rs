@@ -38,9 +38,3 @@ impl SendRequest for surf::Client {
         Ok(response)
     }
 }
-
-impl From<Error> for crate::Error<Error> {
-    fn from(inner: Error) -> Self {
-        crate::Error::Client(inner)
-    }
-}

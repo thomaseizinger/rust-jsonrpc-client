@@ -110,10 +110,16 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 
         let send_request_call = match &method.sig.output {
             ReturnType::Default => quote! {
-               self.send_request::<#return_type>(request).await?;
+               self.send_request::<#return_type>(request).await.map_err(|e| ::jsonrpc_client::Error::Client {
+                    inner: e,
+                    rpc_method: stringify!(#method_ident)
+                })?;
             },
             ReturnType::Type(_, return_type) => quote_spanned! { return_type.span() =>
-                self.send_request::<#return_type>(request).await?;
+                self.send_request::<#return_type>(request).await.map_err(|e| ::jsonrpc_client::Error::Client {
+                    inner: e,
+                    rpc_method: stringify!(#method_ident)
+                })?;
             },
         };
         let attrs = &method.attrs;
@@ -126,7 +132,10 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
                     .serialize()?;
 
                 let response = #send_request_call
-                let success = Result::from(response.payload)?;
+                let success = Result::from(response.payload).map_err(|e| ::jsonrpc_client::Error::JsonRpc {
+                    inner: e,
+                    rpc_method: stringify!(#method_ident)
+                })?;
 
                 Ok(success)
             }
@@ -138,7 +147,7 @@ fn make_new_trait(input: TokenStream, attr: TokenStream) -> Result<TokenStream, 
 
     Ok(quote! {
         #[::jsonrpc_client::export::async_trait::async_trait]
-        #vis trait #trait_ident<C> where C: ::jsonrpc_client::SendRequest, ::jsonrpc_client::Error<<C as jsonrpc_client::SendRequest>::Error>: From<<C as jsonrpc_client::SendRequest>::Error> {
+        #vis trait #trait_ident<C> where C: ::jsonrpc_client::SendRequest {
             #(#new_methods)*
 
             async fn send_request<P: ::jsonrpc_client::export::serde::de::DeserializeOwned>(&self, request: String) -> std::result::Result<::jsonrpc_client::Response<P>, <C as ::jsonrpc_client::SendRequest>::Error>;

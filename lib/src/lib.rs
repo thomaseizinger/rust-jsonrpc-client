@@ -62,7 +62,7 @@
 //! ```
 
 #[cfg(feature = "reqwest")]
-mod reqwest;
+pub mod reqwest;
 
 #[cfg(feature = "surf")]
 pub mod surf;
@@ -330,8 +330,14 @@ impl StdError for JsonRpcError {}
 
 #[derive(Debug)]
 pub enum Error<C> {
-    Client(C),
-    JsonRpc(JsonRpcError),
+    Client {
+        inner: C,
+        rpc_method: &'static str,
+    },
+    JsonRpc {
+        inner: JsonRpcError,
+        rpc_method: &'static str,
+    },
     Serde(serde_json::Error),
 }
 
@@ -341,8 +347,12 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Client(inner) => fmt::Display::fmt(inner, f),
-            Error::JsonRpc(inner) => fmt::Display::fmt(inner, f),
+            Error::Client { inner, rpc_method } => {
+                write!(f, "rpc call `{}` failed: {}", rpc_method, inner)
+            }
+            Error::JsonRpc { inner, rpc_method } => {
+                write!(f, "rpc call `{}` failed: {}", rpc_method, inner)
+            }
             Error::Serde(inner) => fmt::Display::fmt(inner, f),
         }
     }
@@ -354,20 +364,14 @@ impl<C> From<serde_json::Error> for Error<C> {
     }
 }
 
-impl<C> From<JsonRpcError> for Error<C> {
-    fn from(jsonrpc_error: JsonRpcError) -> Self {
-        Error::JsonRpc(jsonrpc_error)
-    }
-}
-
 impl<C> StdError for Error<C>
 where
     C: StdError + 'static,
 {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match self {
-            Error::Client(inner) => Some(inner),
-            Error::JsonRpc(inner) => Some(inner),
+            Error::Client { inner, .. } => Some(inner),
+            Error::JsonRpc { inner, .. } => Some(inner),
             Error::Serde(inner) => Some(inner),
         }
     }
@@ -394,11 +398,6 @@ where
 /// #     }
 /// # }
 /// # impl std::error::Error for MyError { }
-/// # impl From<MyError> for jsonrpc_client::Error<MyError> {
-/// #    fn from(e: MyError) -> Self {
-/// #        unimplemented!()
-/// #    }
-/// # }
 ///
 /// # #[cfg(feature = "macros")]
 /// #[async_trait::async_trait]
@@ -428,10 +427,7 @@ where
 /// }
 /// ```
 #[async_trait::async_trait]
-pub trait SendRequest: 'static
-where
-    Error<Self::Error>: From<Self::Error>,
-{
+pub trait SendRequest: 'static {
     type Error: StdError;
 
     async fn send_request<P>(

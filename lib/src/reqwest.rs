@@ -49,7 +49,7 @@ impl SendRequest for reqwest::Client {
     {
         #[cfg(feature = "log")]
         {
-            log::debug!("POST {} -> {}", endpoint, body);
+            log::debug!("POST {} {}", endpoint, body);
         }
 
         let response = self
@@ -71,11 +71,5 @@ impl SendRequest for reqwest::Client {
         {
             Ok(response.json().await?)
         }
-    }
-}
-
-impl From<Error> for crate::Error<Error> {
-    fn from(inner: Error) -> Self {
-        crate::Error::Client(inner)
     }
 }

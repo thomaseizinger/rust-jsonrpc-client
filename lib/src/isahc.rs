@@ -30,9 +30,3 @@ impl SendRequest for isahc::HttpClient {
         Ok(response)
     }
 }
-
-impl From<isahc::Error> for crate::Error<isahc::Error> {
-    fn from(inner: isahc::Error) -> Self {
-        crate::Error::Client(inner)
-    }
-}
