@@ -21,6 +21,7 @@ isahc = { version = "0.9", features = [ "json" ], optional = true }
 jsonrpc_client_macro = { version = "0.3", path = "../macro", optional = true }
 reqwest = { version = "0.11", default-features = false, features = [ "json" ], optional = true }
 surf = { version = "2", optional = true }
+ureq = { version = "2.1", default-fetaures = false, features = ["json"], optional = true }
 
 [dev-dependencies]
 anyhow = "1"
@@ -53,6 +54,10 @@ required-features = [ "surf", "macros" ]
 [[example]]
 name = "isahc"
 required-features = [ "isahc", "macros" ]
+
+[[example]]
+name = "ureq"
+required-features = [ "ureq", "macros" ]
 
 [features]
 default = [ "macros" ]
