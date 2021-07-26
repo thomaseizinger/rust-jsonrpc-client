@@ -30,6 +30,8 @@ jobs:
           profile: minimal
           components: clippy
 
+      - uses: Swatinem/rust-cache@v1.2.0
+
       - name: Check no warnings
         uses: actions-rs/clippy@master
         with:
