@@ -134,6 +134,7 @@ pub use jsonrpc_client_macro::implement;
 pub use url::Url;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde_json::Value;
 use std::{
     error::Error as StdError,
     fmt::{self, Debug},
@@ -297,6 +298,7 @@ impl<P> From<ResponsePayload<P>> for Result<P, JsonRpcError> {
             } => Err(JsonRpcError {
                 code: -32603,
                 message: "invalid JSON-RPC response, got both `result` and `error`".to_string(),
+                data: None,
             }),
             ResponsePayload {
                 error: None,
@@ -304,6 +306,7 @@ impl<P> From<ResponsePayload<P>> for Result<P, JsonRpcError> {
             } => Err(JsonRpcError {
                 code: -32603,
                 message: "invalid JSON-RPC response, got neither `result` nor `error`".to_string(),
+                data: None,
             }),
         }
     }
@@ -314,6 +317,8 @@ impl<P> From<ResponsePayload<P>> for Result<P, JsonRpcError> {
 pub struct JsonRpcError {
     pub code: i64,
     pub message: String,
+    #[serde(default)]
+    pub data: Option<Value>,
 }
 
 impl fmt::Display for JsonRpcError {
@@ -459,7 +464,8 @@ mod tests {
             Result::from(response.payload),
             Err(JsonRpcError {
                 code: -6,
-                message: "Insufficient funds".to_owned()
+                message: "Insufficient funds".to_owned(),
+                data: None,
             })
         )
     }
@@ -476,7 +482,8 @@ mod tests {
             Result::from(response.payload),
             Err(JsonRpcError {
                 code: -6,
-                message: "Insufficient funds".to_owned()
+                message: "Insufficient funds".to_owned(),
+                data: None,
             })
         )
     }
@@ -493,7 +500,8 @@ mod tests {
             Result::from(response.payload),
             Err(JsonRpcError {
                 code: -6,
-                message: "Insufficient funds".to_owned()
+                message: "Insufficient funds".to_owned(),
+                data: None,
             })
         )
     }
@@ -510,7 +518,8 @@ mod tests {
             Result::from(response.payload),
             Err(JsonRpcError {
                 code: -6,
-                message: "Insufficient funds".to_owned()
+                message: "Insufficient funds".to_owned(),
+                data: None,
             })
         )
     }
@@ -527,7 +536,26 @@ mod tests {
             Result::from(response.payload),
             Err(JsonRpcError {
                 code: -32601,
-                message: "Method not found".to_owned()
+                message: "Method not found".to_owned(),
+                data: None,
+            })
+        )
+    }
+
+    #[test]
+    fn deserialize_error_response_with_data() {
+        let json = r#"{"jsonrpc": "2.0", "error": {"code": 1010, "message": "Invalid Transaction", "data": "BadProof"}, "id": "1"}"#;
+
+        let response = serde_json::from_str::<Response<()>>(json).unwrap();
+
+        assert_eq!(response.id, Id::String("1".to_owned()));
+        assert_eq!(response.jsonrpc, Some(Version::V2));
+        assert_eq!(
+            Result::from(response.payload),
+            Err(JsonRpcError {
+                code: 1010,
+                message: "Invalid Transaction".to_owned(),
+                data: Some(Value::String("BadProof".to_owned())),
             })
         )
     }
