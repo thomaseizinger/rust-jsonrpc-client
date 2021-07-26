@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `JsonRpcError` now includes the optional `data` field, defined [here](https://www.jsonrpc.org/specification#error_object).
+
 ## [0.6.0] - 2021-04-26
 
-## Changed
+### Changed
 
 - APIs defined with `version = 2.0` (as in `#[jsonrpc_client::api(version = "2.0")]`) will now serialize their arguments by name instead of by position.
   The JSON-RPC spec is vague on whether every `2.0` server must accept parameters by name.
@@ -18,13 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.1] - 2021-02-22
 
-## Changed
+### Changed
 
 - Deactivate `default-features` of the `reqwest` dependency.
 
 ## [0.5.0] - 2021-01-11
 
-## Changed
+### Changed
 
 - Bump version of `reqwest` to 0.11 and thereby change the transitive dependency of `tokio` to 1.0.
 
