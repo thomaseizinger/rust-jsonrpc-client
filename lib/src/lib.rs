@@ -325,8 +325,8 @@ impl fmt::Display for JsonRpcError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "JSON-RPC request failed with code {}: {}",
-            self.code, self.message
+            "JSON-RPC request failed with code {}, message: {}, data: {:?}",
+            self.code, self.message, self.data
         )
     }
 }
