@@ -379,17 +379,17 @@ where
 ///
 /// # Example
 ///
-/// ```rust,no_run
+/// ```rust
 /// # use serde::de::DeserializeOwned;
 /// # use jsonrpc_client::{Response, SendRequest, Url};
-/// use bitcoincore_rpc_json::bitcoin::hashes::core::fmt::Formatter;
+/// # use std::fmt;
 /// struct MyHttpClient;
 ///
 /// # #[derive(Debug)]
 /// struct MyError;
 ///
-/// # impl std::fmt::Display for MyError {
-/// #     fn fmt(&self,f: &mut Formatter<'_>) -> std::fmt::Result {
+/// # impl fmt::Display for MyError {
+/// #     fn fmt(&self,f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
 /// #         unimplemented!()
 /// #     }
 /// # }
