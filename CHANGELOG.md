@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - `JsonRpcError` now includes the optional `data` field, defined [here](https://www.jsonrpc.org/specification#error_object).
 
 ## [0.6.0] - 2021-04-26
