@@ -1,4 +1,4 @@
-name: "Release to crates.io"
+name: "Release lib to crates.io"
 
 on:
   release:
@@ -13,6 +13,6 @@ jobs:
         with:
           ref: ${{ github.event.release.target_commitish }}
 
-      - run: cargo publish
+      - run: cargo publish --manifest-path=lib/Cargo.toml
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
