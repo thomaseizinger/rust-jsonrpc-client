@@ -66,7 +66,7 @@ jobs:
             --reviewer ${{ github.actor }} \
             --title Release version ${{ github.event.inputs.version }} \
             --head ${{ env.RELEASE_BRANCH }} \
-            --body $BODY
+            --body "$BODY"
         env:
           # Using a bot account is important to trigger subsequent workflows.
           # See https://devopsdirective.com/posts/2020/07/stupid-github-actions/#2----recursive-action.
