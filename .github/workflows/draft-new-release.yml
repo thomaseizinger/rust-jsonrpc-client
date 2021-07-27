@@ -1,4 +1,4 @@
-name: "Draft new release"
+name: "Draft new lib release"
 
 on:
   workflow_dispatch:
@@ -34,7 +34,7 @@ jobs:
         uses: thomaseizinger/set-crate-version@1.0.0
         with:
           version: ${{ github.event.inputs.version }}
-          manifest: Cargo.toml
+          manifest: lib/Cargo.toml
 
       - name: Commit changelog and manifest files
         id: make-commit
@@ -42,7 +42,7 @@ jobs:
           curl -fsSL https://dprint.dev/install.sh | sh
           /home/runner/.dprint/bin/dprint fmt
 
-          git add CHANGELOG.md Cargo.toml
+          git add CHANGELOG.md lib/Cargo.toml
           git commit --message "Prepare release ${{ github.event.inputs.version }}"
 
           echo "::set-output name=commit::$(git rev-parse HEAD)"
