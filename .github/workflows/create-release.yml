@@ -32,6 +32,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: gh release create ${{ steps.extract-version.outputs.version }} \
-          --title ${{ steps.extract-version.outputs.version }} \
-          --notes ${{ steps.changelog.outputs.description }} \
+          --title "${{ steps.extract-version.outputs.version }}" \
+          --notes "${{ steps.changelog.outputs.description }}" \
           --target ${{ github.event.pull_request.merge_commit_sha }}
