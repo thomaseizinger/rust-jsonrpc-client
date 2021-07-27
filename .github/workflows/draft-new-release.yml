@@ -64,7 +64,7 @@ jobs:
 
           gh pr create \
             --reviewer ${{ github.actor }} \
-            --title Release version ${{ github.event.inputs.version }} \
+            --title "Release version ${{ github.event.inputs.version }}" \
             --head ${{ env.RELEASE_BRANCH }} \
             --body "$BODY"
         env:
