@@ -166,7 +166,8 @@ pub struct Request {
     pub id: Id,
     pub jsonrpc: Version,
     pub method: String,
-    pub params: Params,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub params: Option<Params>,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
@@ -182,7 +183,7 @@ impl Request {
             id: Id::Number(0),
             jsonrpc: Version::V1,
             method: method.to_owned(),
-            params: Params::ByPosition(vec![]),
+            params: Some(Params::ByPosition(vec![])),
         }
     }
 
@@ -191,7 +192,7 @@ impl Request {
             id: Id::Number(0),
             jsonrpc: Version::V2,
             method: method.to_owned(),
-            params: Params::ByName(serde_json::Map::new()),
+            params: Some(Params::ByName(serde_json::Map::new())),
         }
     }
 
@@ -203,16 +204,25 @@ impl Request {
         let argument = serde_json::to_value(argument)?;
 
         match &mut self.params {
-            Params::ByPosition(params) => params.push(argument),
-            Params::ByName(params) => {
+            Some(Params::ByPosition(params)) => params.push(argument),
+            Some(Params::ByName(params)) => {
                 params.insert(name, argument);
             }
+            _ => (),
         };
 
         Ok(self)
     }
 
-    pub fn serialize(&self) -> Result<String, serde_json::Error> {
+    pub fn serialize(mut self) -> Result<String, serde_json::Error> {
+        match &mut self.params {
+            Some(Params::ByName(params)) => {
+                if params.is_empty() {
+                    self.params = None;
+                }
+            }
+            _ => (),
+        };
         serde_json::to_string(&self)
     }
 }
@@ -579,7 +589,7 @@ mod tests {
             .with_argument("second".to_owned(), 23)
             .unwrap();
 
-        let json = serde_json::to_string(&request).unwrap();
+        let json = request.serialize().unwrap();
 
         assert_eq!(
             json,
@@ -595,11 +605,20 @@ mod tests {
             .with_argument("second".to_owned(), 23)
             .unwrap();
 
-        let json = serde_json::to_string(&request).unwrap();
+        let json = request.serialize().unwrap();
 
         assert_eq!(
             json,
             r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":{"first":42,"second":23}}"#
         );
+    }
+
+    #[test]
+    fn serialize_request_v2_empty_params() {
+        let request = Request::new_v2("subtract");
+
+        let json = request.serialize().unwrap();
+
+        assert_eq!(json, r#"{"id":0,"jsonrpc":"2.0","method":"subtract"}"#);
     }
 }
