@@ -61,7 +61,6 @@
 //! jsonrpc_client = { version = "*", features = ["reqwest", "surf", "isahc"] }
 //! ```
 
-use serde::Serializer;
 #[cfg(feature = "reqwest")]
 mod reqwest;
 
@@ -132,10 +131,9 @@ pub mod export {
 #[cfg(feature = "macros")]
 pub use jsonrpc_client_macro::implement;
 
-use serde::ser::SerializeStruct;
 pub use url::Url;
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use serde_json::Value;
 use std::{
     error::Error as StdError,
