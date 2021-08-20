@@ -61,6 +61,7 @@
 //! jsonrpc_client = { version = "*", features = ["reqwest", "surf", "isahc"] }
 //! ```
 
+use serde::Serializer;
 #[cfg(feature = "reqwest")]
 mod reqwest;
 
@@ -131,6 +132,7 @@ pub mod export {
 #[cfg(feature = "macros")]
 pub use jsonrpc_client_macro::implement;
 
+use serde::ser::SerializeStruct;
 pub use url::Url;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -161,13 +163,12 @@ pub enum Version {
 /// A JSON-RPC request.
 ///
 /// Normally, you shouldn't need to interact with this directly. It is used to correctly serialize the request being sent.
-#[derive(Serialize, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Request {
     pub id: Id,
     pub jsonrpc: Version,
     pub method: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub params: Option<Params>,
+    pub params: Params,
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]
@@ -183,7 +184,7 @@ impl Request {
             id: Id::Number(0),
             jsonrpc: Version::V1,
             method: method.to_owned(),
-            params: Some(Params::ByPosition(vec![])),
+            params: Params::ByPosition(vec![]),
         }
     }
 
@@ -192,7 +193,7 @@ impl Request {
             id: Id::Number(0),
             jsonrpc: Version::V2,
             method: method.to_owned(),
-            params: Some(Params::ByName(serde_json::Map::new())),
+            params: Params::ByName(serde_json::Map::new()),
         }
     }
 
@@ -204,26 +205,36 @@ impl Request {
         let argument = serde_json::to_value(argument)?;
 
         match &mut self.params {
-            Some(Params::ByPosition(params)) => params.push(argument),
-            Some(Params::ByName(params)) => {
+            Params::ByPosition(params) => params.push(argument),
+            Params::ByName(params) => {
                 params.insert(name, argument);
             }
-            _ => (),
         };
 
         Ok(self)
     }
 
-    pub fn serialize(mut self) -> Result<String, serde_json::Error> {
-        match &mut self.params {
-            Some(Params::ByName(params)) => {
-                if params.is_empty() {
-                    self.params = None;
-                }
-            }
-            _ => (),
-        };
+    pub fn serialize(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(&self)
+    }
+}
+
+impl Serialize for Request {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut s = s.serialize_struct("request", 4)?;
+        s.serialize_field("id", &self.id)?;
+        s.serialize_field("jsonrpc", &self.jsonrpc)?;
+        s.serialize_field("method", &self.method)?;
+        match &self.params {
+            Params::ByName(m) if m.is_empty() => {}
+            _ => {
+                s.serialize_field("params", &self.params)?;
+            }
+        }
+        s.end()
     }
 }
 
