@@ -222,15 +222,18 @@ impl Serialize for Request {
     where
         S: Serializer,
     {
-        let mut s = s.serialize_struct("request", 4)?;
+        // omit v2 params if empty
+        let fields_cnt = match &self.params {
+            Params::ByName(m) if m.is_empty() => 3,
+            _ => 4,
+        };
+
+        let mut s = s.serialize_struct("Request", fields_cnt)?;
         s.serialize_field("id", &self.id)?;
         s.serialize_field("jsonrpc", &self.jsonrpc)?;
         s.serialize_field("method", &self.method)?;
-        match &self.params {
-            Params::ByName(m) if m.is_empty() => {}
-            _ => {
-                s.serialize_field("params", &self.params)?;
-            }
+        if fields_cnt == 4 {
+            s.serialize_field("params", &self.params)?;
         }
         s.end()
     }
