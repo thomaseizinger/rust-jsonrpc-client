@@ -1,24 +1,24 @@
 [package]
-authors = ["Thomas Eizinger <thomas@eizinger.io>"]
-categories = ["web-programming::http-client", "api-bindings", "network-programming"]
-description = "An async, macro-driven JSON-RPC client with pluggable backends."
-edition = "2018"
-keywords = ["jsonrpc", "macro", "http", "client"]
-license = "MIT OR Apache-2.0"
 name = "jsonrpc_client"
+version = "0.7.0"
+authors = [ "Thomas Eizinger <thomas@eizinger.io>" ]
+categories = [ "web-programming::http-client", "api-bindings", "network-programming" ]
+edition = "2018"
+keywords = [ "jsonrpc", "macro", "http", "client" ]
+license = "MIT OR Apache-2.0"
 readme = "../README.md"
 repository = "https://github.com/thomaseizinger/rust-jsonrpc-client"
-version = "0.7.1"
+description = "An async, macro-driven JSON-RPC client with pluggable backends."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 async-trait = "0.1"
-isahc = {version = "0.9", optional = true, features = ["json"]}
-jsonrpc_client_macro = {version = "0.3", path = "../macro", optional = true}
-reqwest = {version = "0.11", default-features = false, features = ["json"], optional = true}
-serde = {version = "1", features = ["derive"]}
+isahc = { version = "0.9", optional = true, features = [ "json" ] }
+jsonrpc_client_macro = { version = "0.3", path = "../macro", optional = true }
+reqwest = { version = "0.11", default-features = false, features = [ "json" ], optional = true }
+serde = { version = "1", features = [ "derive" ] }
 serde_json = "1"
-surf = {version = "2", optional = true}
+surf = { version = "2", optional = true }
 url = "2"
 
 [dev-dependencies]
@@ -26,33 +26,33 @@ anyhow = "1"
 bitcoincore-rpc-json = "0.12"
 reqwest = "0.11"
 testcontainers = "0.11"
-tokio = {version = "1", features = ["macros", "rt-multi-thread"]}
+tokio = { version = "1", features = [ "macros", "rt-multi-thread" ] }
 trybuild = "1"
 
 [[example]]
 name = "reqwest"
-required-features = ["reqwest", "macros"]
+required-features = [ "reqwest", "macros" ]
 
 [[example]]
 name = "custom_method"
-required-features = ["reqwest", "macros"]
+required-features = [ "reqwest", "macros" ]
 
 [[example]]
 name = "customize_path"
-required-features = ["reqwest", "macros"]
+required-features = [ "reqwest", "macros" ]
 
 [[example]]
 name = "bitcoind"
-required-features = ["reqwest", "macros"]
+required-features = [ "reqwest", "macros" ]
 
 [[example]]
 name = "surf"
-required-features = ["surf", "macros"]
+required-features = [ "surf", "macros" ]
 
 [[example]]
 name = "isahc"
-required-features = ["isahc", "macros"]
+required-features = [ "isahc", "macros" ]
 
 [features]
-default = ["macros"]
-macros = ["jsonrpc_client_macro"]
+default = [ "macros" ]
+macros = [ "jsonrpc_client_macro" ]
