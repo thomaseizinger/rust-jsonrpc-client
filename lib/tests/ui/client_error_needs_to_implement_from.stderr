@@ -27,4 +27,4 @@ error[E0277]: the trait bound `jsonrpc_client::Error<DummyError>: From<DummyErro
    = help: the following implementations were found:
              <jsonrpc_client::Error<C> as From<JsonRpcError>>
              <jsonrpc_client::Error<C> as From<serde_json::error::Error>>
-   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the attribute macro `jsonrpc_client::implement` (in Nightly builds, run with -Z macro-backtrace for more info)
