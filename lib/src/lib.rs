@@ -133,7 +133,7 @@ pub use jsonrpc_client_macro::implement;
 
 pub use url::Url;
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use serde_json::Value;
 use std::{
     error::Error as StdError,
@@ -161,7 +161,7 @@ pub enum Version {
 /// A JSON-RPC request.
 ///
 /// Normally, you shouldn't need to interact with this directly. It is used to correctly serialize the request being sent.
-#[derive(Serialize, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Request {
     pub id: Id,
     pub jsonrpc: Version,
@@ -214,6 +214,28 @@ impl Request {
 
     pub fn serialize(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(&self)
+    }
+}
+
+impl Serialize for Request {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // omit v2 params if empty
+        let fields_cnt = match &self.params {
+            Params::ByName(m) if m.is_empty() => 3,
+            _ => 4,
+        };
+
+        let mut s = s.serialize_struct("Request", fields_cnt)?;
+        s.serialize_field("id", &self.id)?;
+        s.serialize_field("jsonrpc", &self.jsonrpc)?;
+        s.serialize_field("method", &self.method)?;
+        if fields_cnt == 4 {
+            s.serialize_field("params", &self.params)?;
+        }
+        s.end()
     }
 }
 
@@ -579,7 +601,7 @@ mod tests {
             .with_argument("second".to_owned(), 23)
             .unwrap();
 
-        let json = serde_json::to_string(&request).unwrap();
+        let json = request.serialize().unwrap();
 
         assert_eq!(
             json,
@@ -595,11 +617,20 @@ mod tests {
             .with_argument("second".to_owned(), 23)
             .unwrap();
 
-        let json = serde_json::to_string(&request).unwrap();
+        let json = request.serialize().unwrap();
 
         assert_eq!(
             json,
             r#"{"id":0,"jsonrpc":"2.0","method":"subtract","params":{"first":42,"second":23}}"#
         );
+    }
+
+    #[test]
+    fn serialize_request_v2_empty_params() {
+        let request = Request::new_v2("subtract");
+
+        let json = request.serialize().unwrap();
+
+        assert_eq!(json, r#"{"id":0,"jsonrpc":"2.0","method":"subtract"}"#);
     }
 }

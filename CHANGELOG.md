@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Request` now omits `params` from serialization when empty for version 2.0 jsonrpm calls as defined [here](https://www.jsonrpc.org/specification#request_object).
+
 ## [0.7.0] - 2021-07-27
 
 ### Added
@@ -46,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This version is a complete re-write of the original `jsonrpc_client` crate.
 It features a proc-macro based approach for declaring JSON-RPC APIs which you can then interact with using a number of different backends.
 
-[Unreleased]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/0.7.0...HEAD
+[unreleased]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/0.7.0...HEAD
 [0.7.0]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/v0.6.0...0.7.0
 [0.6.0]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/thomaseizinger/rust-jsonrpc-client/compare/v0.5.0...v0.5.1
