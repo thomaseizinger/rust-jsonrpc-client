@@ -1,30 +1,35 @@
 error[E0277]: the trait bound `jsonrpc_client::Error<DummyError>: From<DummyError>` is not satisfied
-   --> $DIR/client_error_needs_to_implement_from.rs:24:6
-    |
-24  | impl SendRequest for InnerClient {
-    |      ^^^^^^^^^^^ the trait `From<DummyError>` is not implemented for `jsonrpc_client::Error<DummyError>`
-    |
-   ::: $WORKSPACE/lib/src/lib.rs
-    |
-    |     Error<Self::Error>: From<Self::Error>,
-    |                         ----------------- required by this bound in `SendRequest`
-    |
-    = help: the following implementations were found:
-              <jsonrpc_client::Error<C> as From<JsonRpcError>>
-              <jsonrpc_client::Error<C> as From<serde_json::error::Error>>
+  --> tests/ui/client_error_needs_to_implement_from.rs:24:6
+   |
+24 | impl SendRequest for InnerClient {
+   |      ^^^^^^^^^^^ the trait `From<DummyError>` is not implemented for `jsonrpc_client::Error<DummyError>`
+   |
+   = help: the following other types implement trait `From<T>`:
+             <jsonrpc_client::Error<C> as From<JsonRpcError>>
+             <jsonrpc_client::Error<C> as From<serde_json::error::Error>>
+note: required by a bound in `SendRequest`
+  --> src/lib.rs
+   |
+   | pub trait SendRequest: 'static
+   |           ----------- required by a bound in this trait
+   | where
+   |     Error<Self::Error>: From<Self::Error>,
+   |                         ^^^^^^^^^^^^^^^^^ required by this bound in `SendRequest`
 
 error[E0277]: the trait bound `jsonrpc_client::Error<DummyError>: From<DummyError>` is not satisfied
-  --> $DIR/client_error_needs_to_implement_from.rs:35:1
+  --> tests/ui/client_error_needs_to_implement_from.rs:35:1
    |
-5  | #[jsonrpc_client::api]
-   | ---------------------- required by this bound in `Math`
-6  | pub trait Math {
-   |           ---- required by a bound in this
-...
 35 | #[jsonrpc_client::implement(Math)]
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<DummyError>` is not implemented for `jsonrpc_client::Error<DummyError>`
    |
-   = help: the following implementations were found:
+   = help: the following other types implement trait `From<T>`:
              <jsonrpc_client::Error<C> as From<JsonRpcError>>
              <jsonrpc_client::Error<C> as From<serde_json::error::Error>>
-   = note: this error originates in the attribute macro `jsonrpc_client::implement` (in Nightly builds, run with -Z macro-backtrace for more info)
+note: required by a bound in `Math`
+  --> tests/ui/client_error_needs_to_implement_from.rs:5:1
+   |
+5  | #[jsonrpc_client::api]
+   | ^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Math`
+6  | pub trait Math {
+   |           ---- required by a bound in this trait
+   = note: this error originates in the attribute macro `jsonrpc_client::implement` which comes from the expansion of the attribute macro `jsonrpc_client::api` (in Nightly builds, run with -Z macro-backtrace for more info)

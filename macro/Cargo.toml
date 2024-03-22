@@ -18,4 +18,4 @@ syn = { version = "1", features = [ "full" ] }
 [dev-dependencies]
 anyhow = "1"
 async-trait = "0.1"
-reqwest = "0.11"
+reqwest = "0.12"
