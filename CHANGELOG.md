@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Bump `reqwest` from 0.11 to 0.12, which is incompatible with 0.7.x of this library.
+
 ## [0.7.1] - 2021-08-26
 
 ### Added
