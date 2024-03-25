@@ -1,6 +1,6 @@
 [package]
 name = "jsonrpc_client_macro"
-version = "0.3.0"
+version = "0.4.0"
 authors = [ "Thomas Eizinger <thomas@eizinger.io>" ]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -18,4 +18,4 @@ syn = { version = "1", features = [ "full" ] }
 [dev-dependencies]
 anyhow = "1"
 async-trait = "0.1"
-reqwest = "0.11"
+reqwest = "0.12"

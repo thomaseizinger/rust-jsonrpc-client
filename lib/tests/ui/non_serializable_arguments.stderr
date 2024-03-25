@@ -1,11 +1,47 @@
 error[E0277]: the trait bound `Number: Serialize` is not satisfied
- --> $DIR/non_serializable_arguments.rs:5:30
+ --> tests/ui/non_serializable_arguments.rs:5:30
   |
 5 |     async fn subtract(&self, subtrahend: Number, minuend: Number) -> u64;
-  |                              ^^^^^^^^^^ the trait `Serialize` is not implemented for `Number`
+  |                              ^^^^^^^^^^  ------ required by a bound introduced by this call
+  |                              |
+  |                              the trait `Serialize` is not implemented for `Number`
+  |
+  = help: the following other types implement trait `Serialize`:
+            bool
+            char
+            isize
+            i8
+            i16
+            i32
+            i64
+            i128
+          and $N others
+note: required by a bound in `jsonrpc_client::Request::with_argument`
+ --> src/lib.rs
+  |
+  |     pub fn with_argument<T: Serialize>(
+  |                             ^^^^^^^^^ required by this bound in `Request::with_argument`
 
 error[E0277]: the trait bound `Number: Serialize` is not satisfied
- --> $DIR/non_serializable_arguments.rs:5:50
+ --> tests/ui/non_serializable_arguments.rs:5:50
   |
 5 |     async fn subtract(&self, subtrahend: Number, minuend: Number) -> u64;
-  |                                                  ^^^^^^^ the trait `Serialize` is not implemented for `Number`
+  |                                                  ^^^^^^^  ------ required by a bound introduced by this call
+  |                                                  |
+  |                                                  the trait `Serialize` is not implemented for `Number`
+  |
+  = help: the following other types implement trait `Serialize`:
+            bool
+            char
+            isize
+            i8
+            i16
+            i32
+            i64
+            i128
+          and $N others
+note: required by a bound in `jsonrpc_client::Request::with_argument`
+ --> src/lib.rs
+  |
+  |     pub fn with_argument<T: Serialize>(
+  |                             ^^^^^^^^^ required by this bound in `Request::with_argument`
